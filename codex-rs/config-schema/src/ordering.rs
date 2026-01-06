@@ -123,7 +123,7 @@ pub const NOTICE_KEY_ORDER: &[&str] = &[
 /// so that Tombi's "schema" sorting strategy produces the desired key order
 /// in formatted TOML files.
 ///
-/// Must be called after `sort_json_keys` since that function alphabetizes everything.
+/// Must be called after `sort_json_keys_with_config` since that function alphabetizes everything.
 pub fn reorder_mcp_server_config_properties(schema: &mut serde_json::Value) {
     let Some(obj) = schema.as_object_mut() else {
         return;
@@ -171,7 +171,7 @@ pub fn reorder_mcp_server_config_properties(schema: &mut serde_json::Value) {
 /// so that Tombi's "schema" sorting strategy produces the desired key order
 /// in formatted TOML files, matching the official sample config groupings.
 ///
-/// Must be called after `sort_json_keys` since that function alphabetizes everything.
+/// Must be called after `sort_json_keys_with_config` since that function alphabetizes everything.
 pub fn reorder_config_toml_properties(schema: &mut serde_json::Value) {
     let Some(obj) = schema.as_object_mut() else {
         return;
@@ -207,7 +207,7 @@ pub fn reorder_config_toml_properties(schema: &mut serde_json::Value) {
 /// Tombi's "schema" sorting strategy produces the desired key order.
 /// Also adds ascending sort for model_migrations additionalProperties.
 ///
-/// Must be called after `sort_json_keys` since that function alphabetizes everything.
+/// Must be called after `sort_json_keys_with_config` since that function alphabetizes everything.
 pub fn reorder_notice_properties(schema: &mut serde_json::Value) {
     let Some(obj) = schema.as_object_mut() else {
         return;

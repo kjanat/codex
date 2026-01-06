@@ -4,7 +4,8 @@ use codex_core::config::ConfigToml;
 use codex_git::find_git_dir;
 use codex_git::read_default_branch;
 use codex_git::read_origin_url;
-use codex_utils_json_sort::sort_json_keys;
+use codex_utils_json_sort::JSON_SCHEMA_SORT_CONFIG;
+use codex_utils_json_sort::sort_json_keys_with_config;
 use schemars::Schema;
 use schemars::generate::SchemaSettings;
 use schemars::transform::RecursiveTransform;
@@ -100,7 +101,7 @@ fn build_schema_id(config: &SchemaConfig) -> Option<String> {
 ///
 /// The schema conforms to JSON Schema Draft 7 for broad tooling compatibility.
 ///
-/// The returned schema has all object keys sorted using "house style" ordering:
+/// The returned schema has all object keys sorted with JSON Schema priority ordering:
 /// priority keys (`$schema`, `title`, `type`, `properties`, etc.) first,
 /// then remaining keys alphabetically. This ensures readable, deterministic output.
 ///
@@ -150,10 +151,10 @@ pub fn generate_config_schema(config: &SchemaConfig) -> serde_json::Value {
     inject_feature_properties(&mut value);
 
     // Sort all keys for deterministic output
-    let mut sorted = sort_json_keys(value);
+    let mut sorted = sort_json_keys_with_config(value, &JSON_SCHEMA_SORT_CONFIG);
 
     // Reorder properties for Tombi's "schema" sorting strategy.
-    // This must happen after sort_json_keys since it alphabetizes everything.
+    // This must happen after sort_json_keys_with_config since it alphabetizes everything.
     reorder_config_toml_properties(&mut sorted);
     reorder_mcp_server_config_properties(&mut sorted);
     reorder_notice_properties(&mut sorted);
@@ -370,7 +371,7 @@ fn flatten_mcp_server_config(schema: &mut Schema) {
     );
 
     // Use "schema" ordering - Tombi will use the order from our properties object
-    // (reordered by reorder_mcp_server_config_properties after sort_json_keys)
+    // (reordered by reorder_mcp_server_config_properties after sort_json_keys_with_config)
     obj.insert(
         "x-tombi-table-keys-order".to_string(),
         serde_json::json!("schema"),
@@ -429,14 +430,14 @@ mod tests {
     }
 
     #[test]
-    fn test_schema_keys_use_house_style_ordering() {
+    fn test_schema_keys_use_priority_ordering() {
         let schema = generate_config_schema(&test_config());
 
-        // Verify top-level keys follow house style ordering
+        // Verify top-level keys follow priority ordering
         if let Some(obj) = schema.as_object() {
             let keys: Vec<_> = obj.keys().collect();
 
-            // Find positions of key house-style keys
+            // Find positions of priority keys
             let schema_pos = keys.iter().position(|&k| k == "$schema");
             let title_pos = keys.iter().position(|&k| k == "title");
             let desc_pos = keys.iter().position(|&k| k == "description");

@@ -225,7 +225,8 @@ pub(crate) fn create_tool_for_codex_tool_call_reply_param() -> Tool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use codex_utils_json_sort::sort_json_keys;
+    use codex_utils_json_sort::JSON_SCHEMA_SORT_CONFIG;
+    use codex_utils_json_sort::sort_json_keys_with_config;
     use pretty_assertions::assert_eq;
 
     /// We include a test to verify the exact JSON schema as "executable
@@ -311,8 +312,8 @@ mod tests {
           }
         });
         assert_eq!(
-            sort_json_keys(expected_tool_json),
-            sort_json_keys(tool_json)
+            sort_json_keys_with_config(expected_tool_json, &JSON_SCHEMA_SORT_CONFIG),
+            sort_json_keys_with_config(tool_json, &JSON_SCHEMA_SORT_CONFIG)
         );
     }
 
@@ -343,8 +344,8 @@ mod tests {
           "title": "Codex Reply",
         });
         assert_eq!(
-            sort_json_keys(expected_tool_json),
-            sort_json_keys(tool_json)
+            sort_json_keys_with_config(expected_tool_json, &JSON_SCHEMA_SORT_CONFIG),
+            sort_json_keys_with_config(tool_json, &JSON_SCHEMA_SORT_CONFIG)
         );
     }
 }
