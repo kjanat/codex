@@ -263,6 +263,7 @@ impl UriBasedFileOpener {
 /// Settings that govern if and what will be written to `~/.codex/history.jsonl`.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 #[cfg_attr(feature = "config-schema", derive(JsonSchema))]
+#[cfg_attr(feature = "config-schema", schemars(extend("x-tombi-table-keys-order" = "schema")))]
 pub struct History {
     /// If true, history entries will not be written to disk.
     pub persistence: HistoryPersistence,
@@ -330,6 +331,7 @@ pub enum OtelExporterKind {
 /// OTEL settings loaded from config.toml. Fields are optional so we can apply defaults.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 #[cfg_attr(feature = "config-schema", derive(JsonSchema))]
+#[cfg_attr(feature = "config-schema", schemars(extend("x-tombi-table-keys-order" = "schema")))]
 pub struct OtelConfigToml {
     /// Log user prompt in traces
     pub log_user_prompt: Option<bool>,
@@ -399,6 +401,7 @@ pub enum ScrollInputMode {
 /// Collection of settings that are specific to the TUI.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 #[cfg_attr(feature = "config-schema", derive(JsonSchema))]
+#[cfg_attr(feature = "config-schema", schemars(extend("x-tombi-table-keys-order" = "schema")))]
 pub struct Tui {
     /// Enable desktop notifications from the TUI when the terminal is unfocused.
     /// Defaults to `true`.
@@ -528,6 +531,7 @@ const fn default_true() -> bool {
 /// notifications - notices are warnings, NUX screens, acknowledgements, etc.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 #[cfg_attr(feature = "config-schema", derive(JsonSchema))]
+#[cfg_attr(feature = "config-schema", schemars(extend("x-tombi-table-keys-order" = "schema")))]
 pub struct Notice {
     /// Tracks whether the user has acknowledged the full access warning prompt.
     pub hide_full_access_warning: Option<bool>,
@@ -552,6 +556,7 @@ impl Notice {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 #[cfg_attr(feature = "config-schema", derive(JsonSchema))]
+#[cfg_attr(feature = "config-schema", schemars(extend("x-tombi-table-keys-order" = "schema")))]
 pub struct SandboxWorkspaceWrite {
     #[serde(default)]
     pub writable_roots: Vec<AbsolutePathBuf>,
@@ -594,6 +599,7 @@ pub enum ShellEnvironmentPolicyInherit {
 /// `shell` or `local_shell` tool.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 #[cfg_attr(feature = "config-schema", derive(JsonSchema))]
+#[cfg_attr(feature = "config-schema", schemars(extend("x-tombi-table-keys-order" = "schema")))]
 pub struct ShellEnvironmentPolicyToml {
     pub inherit: Option<ShellEnvironmentPolicyInherit>,
 

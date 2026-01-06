@@ -53,6 +53,7 @@ pub enum WireApi {
 /// Serializable representation of a provider definition.
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[cfg_attr(feature = "config-schema", derive(JsonSchema))]
+#[cfg_attr(feature = "config-schema", schemars(extend("x-tombi-table-keys-order" = "schema")))]
 pub struct ModelProviderInfo {
     /// Friendly display name.
     pub name: String,

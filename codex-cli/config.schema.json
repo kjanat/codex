@@ -5,206 +5,6 @@
   "description": "Base config deserialized from ~/.codex/config.toml.",
   "type": "object",
   "properties": {
-    "approval_policy": {
-      "description": "Default approval policy for executing commands.",
-      "anyOf": [
-        {
-          "$ref": "#/definitions/AskForApproval"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "chatgpt_base_url": {
-      "description": "Base URL for requests to ChatGPT (as opposed to the OpenAI API).",
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "check_for_update_on_startup": {
-      "description": "When `true`, checks for Codex updates on startup and surfaces update prompts.\nSet to `false` only if your Codex updates are centrally managed.\nDefaults to `true`.",
-      "type": [
-        "boolean",
-        "null"
-      ]
-    },
-    "cli_auth_credentials_store": {
-      "description": "Preferred backend for storing CLI auth credentials.\nfile (default): Use a file in the Codex home directory.\nkeyring: Use an OS-specific keyring service.\nauto: Use the keyring if available, otherwise use a file.",
-      "default": null,
-      "anyOf": [
-        {
-          "$ref": "#/definitions/AuthCredentialsStoreMode"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "compact_prompt": {
-      "description": "Compact prompt used for history compaction.",
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "developer_instructions": {
-      "description": "Developer instructions inserted as a `developer` role message.",
-      "type": [
-        "string",
-        "null"
-      ],
-      "default": null
-    },
-    "disable_paste_burst": {
-      "description": "When true, disables burst-paste detection for typed input entirely.\nAll characters are inserted as they are received, and no buffering\nor placeholder replacement will occur for fast keypress bursts.",
-      "type": [
-        "boolean",
-        "null"
-      ]
-    },
-    "experimental_compact_prompt_file": {
-      "description": "DEPRECATED: Use `compact_prompt` field instead.",
-      "anyOf": [
-        {
-          "$ref": "#/definitions/AbsolutePathBuf"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "deprecated": true
-    },
-    "experimental_instructions_file": {
-      "description": "DEPRECATED: Use `instructions` field instead.",
-      "anyOf": [
-        {
-          "$ref": "#/definitions/AbsolutePathBuf"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "deprecated": true
-    },
-    "experimental_use_freeform_apply_patch": {
-      "description": "DEPRECATED: Use `[features] apply_patch_freeform = true` instead.",
-      "type": [
-        "boolean",
-        "null"
-      ],
-      "deprecated": true
-    },
-    "experimental_use_unified_exec_tool": {
-      "description": "DEPRECATED: Use `[features] unified_exec = true` instead.",
-      "type": [
-        "boolean",
-        "null"
-      ],
-      "deprecated": true
-    },
-    "features": {
-      "description": "Centralized feature flags (new). Prefer this over individual toggles.",
-      "default": null,
-      "anyOf": [
-        {
-          "$ref": "#/definitions/FeaturesToml"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "file_opener": {
-      "description": "Optional URI-based file opener. If set, citations to files in the model\noutput will be hyperlinked using the specified URI scheme.",
-      "anyOf": [
-        {
-          "$ref": "#/definitions/UriBasedFileOpener"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "forced_chatgpt_workspace_id": {
-      "description": "When set, restricts ChatGPT login to a specific workspace identifier.",
-      "type": [
-        "string",
-        "null"
-      ],
-      "default": null
-    },
-    "forced_login_method": {
-      "description": "When set, restricts the login mechanism users may use.",
-      "default": null,
-      "anyOf": [
-        {
-          "$ref": "#/definitions/ForcedLoginMethod"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "ghost_snapshot": {
-      "description": "Settings for ghost snapshots (used for undo).",
-      "default": null,
-      "anyOf": [
-        {
-          "$ref": "#/definitions/GhostSnapshotToml"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "hide_agent_reasoning": {
-      "description": "When set to `true`, `AgentReasoning` events will be hidden from the\nUI/output. Defaults to `false`.",
-      "type": [
-        "boolean",
-        "null"
-      ]
-    },
-    "history": {
-      "description": "Settings that govern if and what will be written to `~/.codex/history.jsonl`.",
-      "default": null,
-      "anyOf": [
-        {
-          "$ref": "#/definitions/History"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "instructions": {
-      "description": "System instructions.",
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "mcp_oauth_credentials_store": {
-      "description": "Preferred backend for storing MCP OAuth credentials.\nkeyring: Use an OS-specific keyring service.\n         https://github.com/openai/codex/blob/main/codex-rs/rmcp-client/src/oauth.rs#L2\nfile: Use a file in the Codex home directory.\nauto (default): Use the OS-specific keyring service if available, otherwise use a file.",
-      "default": null,
-      "anyOf": [
-        {
-          "$ref": "#/definitions/OAuthCredentialsStoreMode"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "mcp_servers": {
-      "description": "Definition for MCP servers that Codex can reach out to for tool calls.",
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/definitions/McpServerConfig"
-      },
-      "default": {}
-    },
     "model": {
       "description": "Optional override of model selection.",
       "type": [
@@ -218,13 +18,25 @@
         "gpt-5.2-codex"
       ]
     },
-    "model_auto_compact_token_limit": {
-      "description": "Token usage threshold triggering auto-compaction of conversation history.",
+    "review_model": {
+      "description": "Review model override used by the `/review` feature.",
       "type": [
-        "integer",
+        "string",
         "null"
       ],
-      "format": "int64"
+      "examples": [
+        "gpt-5.1-codex-max",
+        "gpt-5.1-codex-mini",
+        "gpt-5.2",
+        "gpt-5.2-codex"
+      ]
+    },
+    "model_provider": {
+      "description": "Provider to use from the model_providers map.",
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "model_context_window": {
       "description": "Size of the context window for the model, in tokens.",
@@ -234,22 +46,25 @@
       ],
       "format": "int64"
     },
-    "model_provider": {
-      "description": "Provider to use from the model_providers map.",
+    "model_auto_compact_token_limit": {
+      "description": "Token usage threshold triggering auto-compaction of conversation history.",
       "type": [
-        "string",
+        "integer",
         "null"
-      ]
+      ],
+      "format": "int64"
     },
-    "model_providers": {
-      "description": "User-defined provider entries that extend/override the built-in list.",
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/definitions/ModelProviderInfo"
-      },
-      "default": {}
+    "tool_output_token_limit": {
+      "description": "Token budget applied when storing tool/function outputs in the context manager.",
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint",
+      "minimum": 0
     },
     "model_reasoning_effort": {
+      "description": "Reasoning effort level for Responses API models.\nControls how much \"thinking\" the model does before responding.",
       "anyOf": [
         {
           "$ref": "#/definitions/ReasoningEffort"
@@ -260,6 +75,7 @@
       ]
     },
     "model_reasoning_summary": {
+      "description": "Reasoning summary mode for Responses API models.\nUseful for debugging and understanding the model's reasoning process.",
       "anyOf": [
         {
           "$ref": "#/definitions/ReasoningSummary"
@@ -267,13 +83,6 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "model_supports_reasoning_summaries": {
-      "description": "Override to force-enable reasoning summaries for the configured model.",
-      "type": [
-        "boolean",
-        "null"
       ]
     },
     "model_verbosity": {
@@ -287,16 +96,58 @@
         }
       ]
     },
-    "notice": {
-      "description": "Collection of in-product notices (different from notifications)\nSee [`crate::config::types::Notices`] for more details",
+    "model_supports_reasoning_summaries": {
+      "description": "Override to force-enable reasoning summaries for the configured model.",
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "developer_instructions": {
+      "description": "Developer instructions inserted as a `developer` role message.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null
+    },
+    "instructions": {
+      "description": "System instructions.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "compact_prompt": {
+      "description": "Compact prompt used for history compaction.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "experimental_instructions_file": {
+      "description": "DEPRECATED: Use `instructions` field instead.",
       "anyOf": [
         {
-          "$ref": "#/definitions/Notice"
+          "$ref": "#/definitions/AbsolutePathBuf"
         },
         {
           "type": "null"
         }
-      ]
+      ],
+      "deprecated": true
+    },
+    "experimental_compact_prompt_file": {
+      "description": "DEPRECATED: Use `compact_prompt` field instead.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/AbsolutePathBuf"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "deprecated": true
     },
     "notify": {
       "description": "Optional external command to spawn for end-user notifications.",
@@ -309,89 +160,15 @@
         "type": "string"
       }
     },
-    "oss_provider": {
-      "description": "Preferred OSS provider for local models, e.g. \"lmstudio\" or \"ollama\".",
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "otel": {
-      "description": "OTEL configuration.",
+    "approval_policy": {
+      "description": "Default approval policy for executing commands.",
       "anyOf": [
         {
-          "$ref": "#/definitions/OtelConfigToml"
+          "$ref": "#/definitions/AskForApproval"
         },
         {
           "type": "null"
         }
-      ]
-    },
-    "profile": {
-      "description": "Profile to use from the `profiles` map.",
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "profiles": {
-      "description": "Named profiles to facilitate switching between different configurations.",
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/definitions/ConfigProfile"
-      },
-      "default": {}
-    },
-    "project_doc_fallback_filenames": {
-      "description": "Ordered list of fallback filenames to look for when AGENTS.md is missing.",
-      "type": [
-        "array",
-        "null"
-      ],
-      "items": {
-        "type": "string"
-      }
-    },
-    "project_doc_max_bytes": {
-      "description": "Maximum number of bytes to include from an AGENTS.md project doc file.",
-      "type": [
-        "integer",
-        "null"
-      ],
-      "format": "uint",
-      "minimum": 0
-    },
-    "project_root_markers": {
-      "description": "Markers used to detect the project root when searching parent\ndirectories for `.codex` folders. Defaults to [\".git\"] when unset.",
-      "type": [
-        "array",
-        "null"
-      ],
-      "default": null,
-      "items": {
-        "type": "string"
-      }
-    },
-    "projects": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "additionalProperties": {
-        "$ref": "#/definitions/ProjectConfig"
-      }
-    },
-    "review_model": {
-      "description": "Review model override used by the `/review` feature.",
-      "type": [
-        "string",
-        "null"
-      ],
-      "examples": [
-        "gpt-5.1-codex-max",
-        "gpt-5.1-codex-mini",
-        "gpt-5.2",
-        "gpt-5.2-codex"
       ]
     },
     "sandbox_mode": {
@@ -417,6 +194,7 @@
       ]
     },
     "shell_environment_policy": {
+      "description": "Policy for environment variables when spawning shell processes.\nControls which variables are inherited, excluded, or explicitly set.",
       "default": {
         "exclude": null,
         "experimental_use_profile": null,
@@ -431,6 +209,47 @@
         }
       ]
     },
+    "history": {
+      "description": "Settings that govern if and what will be written to `~/.codex/history.jsonl`.",
+      "default": null,
+      "anyOf": [
+        {
+          "$ref": "#/definitions/History"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "file_opener": {
+      "description": "Optional URI-based file opener. If set, citations to files in the model\noutput will be hyperlinked using the specified URI scheme.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/UriBasedFileOpener"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "tui": {
+      "description": "Collection of settings that are specific to the TUI.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Tui"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "hide_agent_reasoning": {
+      "description": "When set to `true`, `AgentReasoning` events will be hidden from the\nUI/output. Defaults to `false`.",
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
     "show_raw_agent_reasoning": {
       "description": "When set to `true`, `AgentReasoningRawContentEvent` events will be shown in the UI/output.\nDefaults to `false`.",
       "type": [
@@ -438,14 +257,111 @@
         "null"
       ]
     },
-    "tool_output_token_limit": {
-      "description": "Token budget applied when storing tool/function outputs in the context manager.",
+    "disable_paste_burst": {
+      "description": "When true, disables burst-paste detection for typed input entirely.\nAll characters are inserted as they are received, and no buffering\nor placeholder replacement will occur for fast keypress bursts.",
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "windows_wsl_setup_acknowledged": {
+      "description": "Tracks whether the Windows onboarding screen has been acknowledged.",
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "notice": {
+      "description": "Collection of in-product notices (different from notifications)\nSee [`crate::config::types::Notices`] for more details",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Notice"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cli_auth_credentials_store": {
+      "description": "Preferred backend for storing CLI auth credentials.\nfile (default): Use a file in the Codex home directory.\nkeyring: Use an OS-specific keyring service.\nauto: Use the keyring if available, otherwise use a file.",
+      "default": null,
+      "anyOf": [
+        {
+          "$ref": "#/definitions/AuthCredentialsStoreMode"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "chatgpt_base_url": {
+      "description": "Base URL for requests to ChatGPT (as opposed to the OpenAI API).",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "forced_chatgpt_workspace_id": {
+      "description": "When set, restricts ChatGPT login to a specific workspace identifier.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null
+    },
+    "forced_login_method": {
+      "description": "When set, restricts the login mechanism users may use.",
+      "default": null,
+      "anyOf": [
+        {
+          "$ref": "#/definitions/ForcedLoginMethod"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "mcp_oauth_credentials_store": {
+      "description": "Preferred backend for storing MCP OAuth credentials.\nkeyring: Use an OS-specific keyring service.\n         https://github.com/openai/codex/blob/main/codex-rs/rmcp-client/src/oauth.rs#L2\nfile: Use a file in the Codex home directory.\nauto (default): Use the OS-specific keyring service if available, otherwise use a file.",
+      "default": null,
+      "anyOf": [
+        {
+          "$ref": "#/definitions/OAuthCredentialsStoreMode"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "project_doc_max_bytes": {
+      "description": "Maximum number of bytes to include from an AGENTS.md project doc file.",
       "type": [
         "integer",
         "null"
       ],
       "format": "uint",
       "minimum": 0
+    },
+    "project_doc_fallback_filenames": {
+      "description": "Ordered list of fallback filenames to look for when AGENTS.md is missing.",
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "project_root_markers": {
+      "description": "Markers used to detect the project root when searching parent\ndirectories for `.codex` folders. Defaults to [\".git\"] when unset.",
+      "type": [
+        "array",
+        "null"
+      ],
+      "default": null,
+      "items": {
+        "type": "string"
+      }
     },
     "tools": {
       "description": "DEPRECATED: Use `[features]` table instead.",
@@ -459,25 +375,115 @@
       ],
       "deprecated": true
     },
-    "tui": {
-      "description": "Collection of settings that are specific to the TUI.",
+    "features": {
+      "description": "Centralized feature flags (new). Prefer this over individual toggles.",
+      "default": null,
       "anyOf": [
         {
-          "$ref": "#/definitions/Tui"
+          "$ref": "#/definitions/FeaturesToml"
         },
         {
           "type": "null"
         }
       ]
     },
-    "windows_wsl_setup_acknowledged": {
-      "description": "Tracks whether the Windows onboarding screen has been acknowledged.",
+    "experimental_use_unified_exec_tool": {
+      "description": "DEPRECATED: Use `[features] unified_exec = true` instead.",
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "deprecated": true
+    },
+    "experimental_use_freeform_apply_patch": {
+      "description": "DEPRECATED: Use `[features] apply_patch_freeform = true` instead.",
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "deprecated": true
+    },
+    "ghost_snapshot": {
+      "description": "Settings for ghost snapshots (used for undo).",
+      "default": null,
+      "anyOf": [
+        {
+          "$ref": "#/definitions/GhostSnapshotToml"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "check_for_update_on_startup": {
+      "description": "When `true`, checks for Codex updates on startup and surfaces update prompts.\nSet to `false` only if your Codex updates are centrally managed.\nDefaults to `true`.",
       "type": [
         "boolean",
         "null"
       ]
+    },
+    "mcp_servers": {
+      "description": "Definition for MCP servers that Codex can reach out to for tool calls.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/McpServerConfig"
+      },
+      "default": {}
+    },
+    "model_providers": {
+      "description": "User-defined provider entries that extend/override the built-in list.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/ModelProviderInfo"
+      },
+      "default": {}
+    },
+    "oss_provider": {
+      "description": "Preferred OSS provider for local models, e.g. \"lmstudio\" or \"ollama\".",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "profile": {
+      "description": "Profile to use from the `profiles` map.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "profiles": {
+      "description": "Named profiles to facilitate switching between different configurations.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/ConfigProfile"
+      },
+      "default": {}
+    },
+    "projects": {
+      "description": "Per-project configuration keyed by absolute path.\nUse this to set trust levels for specific project directories.",
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": {
+        "$ref": "#/definitions/ProjectConfig"
+      }
+    },
+    "otel": {
+      "description": "OTEL configuration.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/OtelConfigToml"
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
+  "x-tombi-table-keys-order": "schema",
+  "x-tombi-toml-version": "v1.1.0",
   "definitions": {
     "AbsolutePathBuf": {
       "description": "A path that is guaranteed to be absolute and normalized (though it is not\nguaranteed to be canonicalized or exist on the filesystem).\n\nIMPORTANT: When deserializing an `AbsolutePathBuf`, a base path must be set\nusing [AbsolutePathBufGuard::new]. If no base path is set, the\ndeserialization will fail unless the path being deserialized is already\nabsolute.",
@@ -669,7 +675,8 @@
             "null"
           ]
         }
-      }
+      },
+      "x-tombi-table-keys-order": "schema"
     },
     "FeaturesToml": {
       "description": "Deserializable features table for TOML.",
@@ -763,7 +770,8 @@
           "type": "boolean",
           "default": false
         }
-      }
+      },
+      "x-tombi-table-keys-order": "ascending"
     },
     "ForcedLoginMethod": {
       "type": "string",
@@ -798,7 +806,8 @@
           ],
           "format": "int64"
         }
-      }
+      },
+      "x-tombi-table-keys-order": "schema"
     },
     "History": {
       "description": "Settings that govern if and what will be written to `~/.codex/history.jsonl`.",
@@ -824,7 +833,8 @@
       },
       "required": [
         "persistence"
-      ]
+      ],
+      "x-tombi-table-keys-order": "schema"
     },
     "HistoryPersistence": {
       "oneOf": [
@@ -844,12 +854,39 @@
       "description": "MCP server configuration. Must specify either 'command' (stdio transport) or 'url' (HTTP transport).",
       "type": "object",
       "properties": {
+        "command": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
         "args": {
           "type": "array",
           "default": [],
           "items": {
             "type": "string"
           }
+        },
+        "env": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "env_vars": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cwd": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "bearer_token_env_var": {
           "description": "Name of the environment variable to read for an HTTP bearer token.\nWhen set, requests will include the token via `Authorization: Bearer <token>`.\nThe actual secret value must be provided via the environment.",
@@ -858,41 +895,8 @@
             "null"
           ]
         },
-        "command": {
-          "type": "string"
-        },
-        "cwd": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "disabled_tools": {
-          "description": "Explicit deny-list of tools. These tools will be removed after applying `enabled_tools`.",
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          }
-        },
-        "enabled": {
-          "description": "When `false`, Codex skips initializing this MCP server.",
-          "type": "boolean",
-          "default": true
-        },
-        "enabled_tools": {
-          "description": "Explicit allow-list of tools exposed from this server. When set, only these tools will be registered.",
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          }
-        },
-        "env": {
+        "http_headers": {
+          "description": "Additional HTTP headers to include in requests to this server.",
           "type": [
             "object",
             "null"
@@ -911,21 +915,10 @@
             "type": "string"
           }
         },
-        "env_vars": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "http_headers": {
-          "description": "Additional HTTP headers to include in requests to this server.",
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": {
-            "type": "string"
-          }
+        "enabled": {
+          "description": "When `false`, Codex skips initializing this MCP server.",
+          "type": "boolean",
+          "default": true
         },
         "startup_timeout_sec": {
           "description": "Startup timeout in seconds for initializing MCP server & initially listing tools.",
@@ -944,8 +937,25 @@
           "default": null,
           "format": "double"
         },
-        "url": {
-          "type": "string"
+        "enabled_tools": {
+          "description": "Explicit allow-list of tools exposed from this server. When set, only these tools will be registered.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "disabled_tools": {
+          "description": "Explicit deny-list of tools. These tools will be removed after applying `enabled_tools`.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
         }
       },
       "oneOf": [
@@ -959,7 +969,8 @@
             "url"
           ]
         }
-      ]
+      ],
+      "x-tombi-table-keys-order": "schema"
     },
     "ModelProviderInfo": {
       "description": "Serializable representation of a provider definition.",
@@ -1071,7 +1082,8 @@
       },
       "required": [
         "name"
-      ]
+      ],
+      "x-tombi-table-keys-order": "schema"
     },
     "Notice": {
       "description": "Settings for notices we display to users via the tui and app-server clients\n(primarily the Codex IDE extension). NOTE: these are different from\nnotifications - notices are warnings, NUX screens, acknowledgements, etc.",
@@ -1084,15 +1096,8 @@
             "null"
           ]
         },
-        "hide_gpt-5.1-codex-max_migration_prompt": {
-          "description": "Tracks whether the user has seen the gpt-5.1-codex-max migration prompt",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "hide_gpt5_1_migration_prompt": {
-          "description": "Tracks whether the user has seen the model migration prompt",
+        "hide_world_writable_warning": {
+          "description": "Tracks whether the user has acknowledged the Windows world-writable directories warning.",
           "type": [
             "boolean",
             "null"
@@ -1105,8 +1110,15 @@
             "null"
           ]
         },
-        "hide_world_writable_warning": {
-          "description": "Tracks whether the user has acknowledged the Windows world-writable directories warning.",
+        "hide_gpt5_1_migration_prompt": {
+          "description": "Tracks whether the user has seen the model migration prompt",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "hide_gpt-5.1-codex-max_migration_prompt": {
+          "description": "Tracks whether the user has seen the gpt-5.1-codex-max migration prompt",
           "type": [
             "boolean",
             "null"
@@ -1118,9 +1130,11 @@
           "additionalProperties": {
             "type": "string"
           },
-          "default": {}
+          "default": {},
+          "x-tombi-table-keys-order": "ascending"
         }
-      }
+      },
+      "x-tombi-table-keys-order": "schema"
     },
     "Notifications": {
       "anyOf": [
@@ -1195,7 +1209,8 @@
             }
           ]
         }
-      }
+      },
+      "x-tombi-table-keys-order": "schema"
     },
     "OtelExporterKind": {
       "description": "Which OTEL exporter to use.",
@@ -1350,7 +1365,8 @@
             }
           ]
         }
-      }
+      },
+      "x-tombi-table-keys-order": "schema"
     },
     "ReasoningEffort": {
       "description": "See https://platform.openai.com/docs/guides/reasoning?api-mode=responses#get-started-with-reasoning",
@@ -1412,7 +1428,8 @@
             "$ref": "#/definitions/AbsolutePathBuf"
           }
         }
-      }
+      },
+      "x-tombi-table-keys-order": "schema"
     },
     "ScrollInputMode": {
       "description": "How TUI2 should interpret mouse scroll events.\n\nTerminals generally encode both mouse wheels and trackpads as the same \"scroll up/down\" mouse\nbutton events, without a magnitude. This setting controls whether Codex uses a heuristic to\ninfer wheel vs trackpad per stream, or forces a specific behavior.",
@@ -1508,7 +1525,8 @@
             "type": "string"
           }
         }
-      }
+      },
+      "x-tombi-table-keys-order": "schema"
     },
     "ToolsToml": {
       "description": "Legacy tools configuration table.\n\nDEPRECATED: Use `[features]` table instead:\n- `tools.web_search` -> `features.web_search_request`\n- `tools.view_image` -> `features.view_image_tool`",
@@ -1533,7 +1551,8 @@
           "deprecated": true
         }
       },
-      "deprecated": true
+      "deprecated": true,
+      "x-tombi-table-keys-order": "schema"
     },
     "TrustLevel": {
       "description": "Represents the trust level for a project directory.\nThis determines the approval policy and sandbox mode applied.",
@@ -1648,7 +1667,8 @@
           "type": "boolean",
           "default": true
         }
-      }
+      },
+      "x-tombi-table-keys-order": "schema"
     },
     "UriBasedFileOpener": {
       "oneOf": [

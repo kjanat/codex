@@ -415,7 +415,10 @@ pub fn is_known_feature_key(key: &str) -> bool {
 /// Deserializable features table for TOML.
 #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq)]
 #[cfg_attr(feature = "config-schema", derive(JsonSchema))]
-#[cfg_attr(feature = "config-schema", schemars(extend("additionalProperties" = {"type": "boolean"})))]
+#[cfg_attr(feature = "config-schema", schemars(extend(
+    "additionalProperties" = {"type": "boolean"},
+    "x-tombi-table-keys-order" = "ascending"
+)))]
 pub struct FeaturesToml {
     #[serde(flatten)]
     pub entries: BTreeMap<String, bool>,

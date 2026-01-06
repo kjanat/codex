@@ -680,7 +680,10 @@ pub fn set_default_oss_provider(codex_home: &Path, provider: &str) -> std::io::R
 #[cfg_attr(feature = "config-schema", derive(JsonSchema))]
 #[cfg_attr(
     feature = "config-schema",
-    schemars(title = "Codex configuration file")
+    schemars(
+        title = "Codex configuration file",
+        extend("x-tombi-table-keys-order" = "schema")
+    )
 )]
 pub struct ConfigToml {
     /// Optional override of model selection.
@@ -700,6 +703,8 @@ pub struct ConfigToml {
     /// Default approval policy for executing commands.
     pub approval_policy: Option<AskForApproval>,
 
+    /// Policy for environment variables when spawning shell processes.
+    /// Controls which variables are inherited, excluded, or explicitly set.
     #[serde(default)]
     pub shell_environment_policy: ShellEnvironmentPolicyToml,
 
@@ -789,7 +794,11 @@ pub struct ConfigToml {
     /// Defaults to `false`.
     pub show_raw_agent_reasoning: Option<bool>,
 
+    /// Reasoning effort level for Responses API models.
+    /// Controls how much "thinking" the model does before responding.
     pub model_reasoning_effort: Option<ReasoningEffort>,
+    /// Reasoning summary mode for Responses API models.
+    /// Useful for debugging and understanding the model's reasoning process.
     pub model_reasoning_summary: Option<ReasoningSummary>,
     /// Optional verbosity control for GPT-5 models (Responses API `text.verbosity`).
     pub model_verbosity: Option<Verbosity>,
@@ -800,6 +809,8 @@ pub struct ConfigToml {
     /// Base URL for requests to ChatGPT (as opposed to the OpenAI API).
     pub chatgpt_base_url: Option<String>,
 
+    /// Per-project configuration keyed by absolute path.
+    /// Use this to set trust levels for specific project directories.
     pub projects: Option<HashMap<String, ProjectConfig>>,
 
     /// DEPRECATED: Use `[features]` table instead.
@@ -888,6 +899,7 @@ impl From<ConfigToml> for UserSavedConfig {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "config-schema", derive(JsonSchema))]
+#[cfg_attr(feature = "config-schema", schemars(extend("x-tombi-table-keys-order" = "schema")))]
 pub struct ProjectConfig {
     pub trust_level: Option<TrustLevel>,
 }
@@ -920,7 +932,10 @@ mod legacy_tools_toml {
     #[deprecated = "Use [features] table instead"]
     #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq)]
     #[cfg_attr(feature = "config-schema", derive(JsonSchema))]
-    #[cfg_attr(feature = "config-schema", schemars(transform = fix_tools_toml_defaults))]
+    #[cfg_attr(feature = "config-schema", schemars(
+        transform = fix_tools_toml_defaults,
+        extend("x-tombi-table-keys-order" = "schema")
+    ))]
     pub struct ToolsToml {
         /// Enable web search tool.
         ///
@@ -983,6 +998,7 @@ pub use legacy_tools_toml::ToolsToml;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq, Eq)]
 #[cfg_attr(feature = "config-schema", derive(JsonSchema))]
+#[cfg_attr(feature = "config-schema", schemars(extend("x-tombi-table-keys-order" = "schema")))]
 pub struct GhostSnapshotToml {
     /// Exclude untracked files larger than this many bytes from ghost snapshots.
     #[serde(alias = "ignore_untracked_files_over_bytes")]
