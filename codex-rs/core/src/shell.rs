@@ -346,42 +346,46 @@ mod tests {
     #[test]
     #[cfg(target_os = "macos")]
     fn detects_zsh() {
+        use std::path::Path;
         let zsh_shell = get_shell(ShellType::Zsh, None).unwrap();
 
         let shell_path = zsh_shell.shell_path;
 
-        assert_eq!(shell_path, PathBuf::from("/bin/zsh"));
+        assert_eq!(shell_path, Path::new("/bin/zsh"));
     }
 
     #[test]
     #[cfg(target_os = "macos")]
     fn fish_fallback_to_zsh() {
+        use std::path::Path;
         let zsh_shell = default_user_shell_from_path(Some(PathBuf::from("/bin/fish")));
 
         let shell_path = zsh_shell.shell_path;
 
-        assert_eq!(shell_path, PathBuf::from("/bin/zsh"));
+        assert_eq!(shell_path, Path::new("/bin/zsh"));
     }
 
     #[test]
     fn detects_bash() {
+        use std::path::Path;
         let bash_shell = get_shell(ShellType::Bash, None).unwrap();
         let shell_path = bash_shell.shell_path;
 
         assert!(
-            shell_path == PathBuf::from("/bin/bash")
-                || shell_path == PathBuf::from("/usr/bin/bash")
-                || shell_path == PathBuf::from("/usr/local/bin/bash"),
+            shell_path == Path::new("/bin/bash")
+                || shell_path == Path::new("/usr/bin/bash")
+                || shell_path == Path::new("/usr/local/bin/bash"),
             "shell path: {shell_path:?}",
         );
     }
 
     #[test]
     fn detects_sh() {
+        use std::path::Path;
         let sh_shell = get_shell(ShellType::Sh, None).unwrap();
         let shell_path = sh_shell.shell_path;
         assert!(
-            shell_path == PathBuf::from("/bin/sh") || shell_path == PathBuf::from("/usr/bin/sh"),
+            shell_path == Path::new("/bin/sh") || shell_path == Path::new("/usr/bin/sh"),
             "shell path: {shell_path:?}",
         );
     }
