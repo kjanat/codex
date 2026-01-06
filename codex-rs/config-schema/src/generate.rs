@@ -11,6 +11,7 @@ use schemars::generate::SchemaSettings;
 use schemars::transform::RecursiveTransform;
 
 use crate::ordering::reorder_config_toml_properties;
+use crate::ordering::reorder_features_properties;
 use crate::ordering::reorder_mcp_server_config_properties;
 use crate::ordering::reorder_notice_properties;
 
@@ -158,6 +159,7 @@ pub fn generate_config_schema(config: &SchemaConfig) -> serde_json::Value {
     reorder_config_toml_properties(&mut sorted);
     reorder_mcp_server_config_properties(&mut sorted);
     reorder_notice_properties(&mut sorted);
+    reorder_features_properties(&mut sorted);
 
     sorted
 }
@@ -203,7 +205,12 @@ fn inject_model_examples(schema: &mut serde_json::Value) {
 ///
 /// Each feature from `FEATURES` gets a property with its description derived from
 /// `Feature::description()` and default value from `FeatureSpec::default_enabled`.
+///
+/// Features are sorted by stage (Stable -> Beta -> Experimental -> Deprecated -> Removed),
+/// then alphabetically within each stage. This ordering is used by Tombi's "schema"
+/// sorting strategy.
 fn inject_feature_properties(schema: &mut serde_json::Value) {
+    use codex_core::features::Stage;
     use codex_core::features::all_feature_specs;
 
     let Some(obj) = schema.as_object_mut() else {
@@ -222,9 +229,24 @@ fn inject_feature_properties(schema: &mut serde_json::Value) {
         return;
     };
 
-    // Build properties object from FEATURES
+    // Sort features by stage, then alphabetically within each stage
+    let mut specs: Vec<_> = all_feature_specs().iter().collect();
+    specs.sort_by(|a, b| {
+        let stage_order = |s: &Stage| match s {
+            Stage::Stable => 0,
+            Stage::Beta { .. } => 1,
+            Stage::Experimental => 2,
+            Stage::Deprecated => 3,
+            Stage::Removed => 4,
+        };
+        stage_order(&a.stage)
+            .cmp(&stage_order(&b.stage))
+            .then_with(|| a.key.cmp(b.key))
+    });
+
+    // Build properties object from sorted FEATURES
     let mut properties = serde_json::Map::new();
-    for spec in all_feature_specs() {
+    for spec in specs {
         let description = format!("[{}] {}", spec.stage.schema_label(), spec.id.description());
         properties.insert(
             spec.key.to_string(),

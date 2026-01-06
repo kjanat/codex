@@ -205,7 +205,6 @@ pub fn reorder_config_toml_properties(schema: &mut serde_json::Value) {
 ///
 /// This function reorders the Notice definition properties so that
 /// Tombi's "schema" sorting strategy produces the desired key order.
-/// Also adds ascending sort for model_migrations additionalProperties.
 ///
 /// Must be called after `sort_json_keys_with_config` since that function alphabetizes everything.
 pub fn reorder_notice_properties(schema: &mut serde_json::Value) {
@@ -246,16 +245,77 @@ pub fn reorder_notice_properties(schema: &mut serde_json::Value) {
     }
 
     *props_obj = ordered;
+}
 
-    // Add ascending sort for model_migrations keys (additionalProperties)
-    if let Some(model_migrations) = props_obj.get_mut("model_migrations")
-        && let Some(mm_obj) = model_migrations.as_object_mut()
-    {
-        mm_obj.insert(
-            "x-tombi-table-keys-order".to_string(),
-            serde_json::json!("ascending"),
-        );
+/// Reorder FeaturesToml properties by stage for Tombi's "schema" sorting strategy.
+///
+/// Groups features by lifecycle stage: Stable -> Beta -> Experimental -> Deprecated -> Removed,
+/// then alphabetically within each stage.
+///
+/// Must be called after `sort_json_keys_with_config` since that function alphabetizes everything.
+pub fn reorder_features_properties(schema: &mut serde_json::Value) {
+    let Some(obj) = schema.as_object_mut() else {
+        return;
+    };
+    let Some(defs) = obj.get_mut("definitions") else {
+        return;
+    };
+    let Some(defs_obj) = defs.as_object_mut() else {
+        return;
+    };
+    let Some(features_toml) = defs_obj.get_mut("FeaturesToml") else {
+        return;
+    };
+    let Some(features_obj) = features_toml.as_object_mut() else {
+        return;
+    };
+    let Some(props) = features_obj.get_mut("properties") else {
+        return;
+    };
+    let Some(props_obj) = props.as_object_mut() else {
+        return;
+    };
+
+    // Extract stage from description prefix "[Stage]"
+    fn stage_order(prop: &serde_json::Value) -> u8 {
+        let desc = prop
+            .as_object()
+            .and_then(|o| o.get("description"))
+            .and_then(|d| d.as_str())
+            .unwrap_or("");
+        if desc.starts_with("[Stable]") {
+            0
+        } else if desc.starts_with("[Beta]") {
+            1
+        } else if desc.starts_with("[Experimental]") {
+            2
+        } else if desc.starts_with("[Deprecated]") {
+            3
+        } else if desc.starts_with("[Removed]") {
+            4
+        } else {
+            5 // Unknown stage goes last
+        }
     }
+
+    // Collect entries, sort by stage then key
+    let mut entries: Vec<_> = props_obj
+        .iter()
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect();
+    entries.sort_by(|(k1, v1), (k2, v2)| {
+        stage_order(v1)
+            .cmp(&stage_order(v2))
+            .then_with(|| k1.cmp(k2))
+    });
+
+    // Rebuild ordered map
+    let mut ordered = serde_json::Map::new();
+    for (k, v) in entries {
+        ordered.insert(k, v);
+    }
+
+    *props_obj = ordered;
 }
 
 #[cfg(test)]

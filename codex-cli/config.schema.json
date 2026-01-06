@@ -468,7 +468,8 @@
       ],
       "additionalProperties": {
         "$ref": "#/definitions/ProjectConfig"
-      }
+      },
+      "x-tombi-table-keys-order": "ascending"
     },
     "otel": {
       "description": "OTEL configuration.",
@@ -683,6 +684,46 @@
         "type": "boolean"
       },
       "properties": {
+        "parallel": {
+          "description": "[Stable] Allow model to call multiple tools in parallel (only for models supporting it).",
+          "type": "boolean",
+          "default": true
+        },
+        "shell_tool": {
+          "description": "[Stable] Enable the default shell tool.",
+          "type": "boolean",
+          "default": true
+        },
+        "undo": {
+          "description": "[Stable] Create a ghost commit at each turn.",
+          "type": "boolean",
+          "default": false
+        },
+        "view_image_tool": {
+          "description": "[Stable] Include the view_image tool.",
+          "type": "boolean",
+          "default": true
+        },
+        "warnings": {
+          "description": "[Stable] Send warnings to the model to correct it on the tool usage.",
+          "type": "boolean",
+          "default": true
+        },
+        "web_search_request": {
+          "description": "[Stable] Allow the model to request web searches.",
+          "type": "boolean",
+          "default": false
+        },
+        "shell_snapshot": {
+          "description": "[Beta] Experimental shell snapshotting.",
+          "type": "boolean",
+          "default": false
+        },
+        "unified_exec": {
+          "description": "[Beta] Use the single unified PTY-backed exec tool.",
+          "type": "boolean",
+          "default": false
+        },
         "apply_patch_freeform": {
           "description": "[Experimental] Include the freeform apply_patch tool.",
           "type": "boolean",
@@ -703,11 +744,6 @@
           "type": "boolean",
           "default": false
         },
-        "parallel": {
-          "description": "[Stable] Allow model to call multiple tools in parallel (only for models supporting it).",
-          "type": "boolean",
-          "default": true
-        },
         "powershell_utf8": {
           "description": "[Experimental] Enforce UTF8 output in Powershell.",
           "type": "boolean",
@@ -723,16 +759,6 @@
           "type": "boolean",
           "default": false
         },
-        "shell_snapshot": {
-          "description": "[Beta] Experimental shell snapshotting.",
-          "type": "boolean",
-          "default": false
-        },
-        "shell_tool": {
-          "description": "[Stable] Enable the default shell tool.",
-          "type": "boolean",
-          "default": true
-        },
         "skills": {
           "description": "[Experimental] Enable discovery and injection of skills.",
           "type": "boolean",
@@ -742,34 +768,12 @@
           "description": "[Experimental] Experimental TUI v2 (viewport) implementation.",
           "type": "boolean",
           "default": false
-        },
-        "undo": {
-          "description": "[Stable] Create a ghost commit at each turn.",
-          "type": "boolean",
-          "default": false
-        },
-        "unified_exec": {
-          "description": "[Beta] Use the single unified PTY-backed exec tool.",
-          "type": "boolean",
-          "default": false
-        },
-        "view_image_tool": {
-          "description": "[Stable] Include the view_image tool.",
-          "type": "boolean",
-          "default": true
-        },
-        "warnings": {
-          "description": "[Stable] Send warnings to the model to correct it on the tool usage.",
-          "type": "boolean",
-          "default": true
-        },
-        "web_search_request": {
-          "description": "[Stable] Allow the model to request web searches.",
-          "type": "boolean",
-          "default": false
         }
       },
-      "x-tombi-table-keys-order": "ascending"
+      "x-tombi-table-keys-order": {
+        "additionalProperties": "ascending",
+        "properties": "schema"
+      }
     },
     "ForcedLoginMethod": {
       "type": "string",

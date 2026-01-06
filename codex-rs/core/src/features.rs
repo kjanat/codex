@@ -417,7 +417,7 @@ pub fn is_known_feature_key(key: &str) -> bool {
 #[cfg_attr(feature = "config-schema", derive(JsonSchema))]
 #[cfg_attr(feature = "config-schema", schemars(extend(
     "additionalProperties" = {"type": "boolean"},
-    "x-tombi-table-keys-order" = "ascending"
+    "x-tombi-table-keys-order" = {"properties": "schema", "additionalProperties": "ascending"}
 )))]
 pub struct FeaturesToml {
     #[serde(flatten)]

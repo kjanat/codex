@@ -809,6 +809,7 @@ pub struct ConfigToml {
 
     /// Per-project configuration keyed by absolute path.
     /// Use this to set trust levels for specific project directories.
+    #[cfg_attr(feature = "config-schema", schemars(extend("x-tombi-table-keys-order" = "ascending")))]
     pub projects: Option<HashMap<String, ProjectConfig>>,
 
     /// DEPRECATED: Use `[features]` table instead.

@@ -546,6 +546,7 @@ pub struct Notice {
     pub hide_gpt_5_1_codex_max_migration_prompt: Option<bool>,
     /// Tracks acknowledged model migrations as old->new model slug mappings.
     #[serde(default)]
+    #[cfg_attr(feature = "config-schema", schemars(extend("x-tombi-table-keys-order" = "ascending")))]
     pub model_migrations: BTreeMap<String, String>,
 }
 
