@@ -1148,6 +1148,7 @@ dependencies = [
  "codex-chatgpt",
  "codex-cloud-tasks",
  "codex-common",
+ "codex-config-schema",
  "codex-core",
  "codex-exec",
  "codex-execpolicy",
@@ -1259,6 +1260,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "codex-config-schema"
+version = "0.0.0"
+dependencies = [
+ "codex-core",
+ "codex-git",
+ "codex-utils-json-sort",
+ "pretty_assertions",
+ "schemars 1.2.0",
+ "serde_json",
+]
+
+[[package]]
 name = "codex-core"
 version = "0.0.0"
 dependencies = [
@@ -1287,7 +1300,6 @@ dependencies = [
  "codex-rmcp-client",
  "codex-utils-absolute-path",
  "codex-utils-cargo-bin",
- "codex-utils-json-sort",
  "codex-utils-pty",
  "codex-utils-readiness",
  "codex-utils-string",

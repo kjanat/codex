@@ -16,6 +16,7 @@ members = [
     "codex-backend-openapi-models",
     "codex-client",
     "common",
+    "config-schema",
     "core",
     "exec",
     "exec-server",
@@ -88,6 +89,7 @@ codex-backend-client = { path = "backend-client" }
 codex-chatgpt = { path = "chatgpt" }
 codex-client = { path = "codex-client" }
 codex-common = { path = "common" }
+codex-config-schema = { path = "config-schema" }
 codex-core = { path = "core" }
 codex-exec = { path = "exec" }
 codex-execpolicy = { path = "execpolicy" }

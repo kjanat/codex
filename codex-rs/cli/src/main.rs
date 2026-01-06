@@ -659,8 +659,8 @@ async fn cli_main(codex_linux_sandbox_exe: Option<PathBuf>) -> anyhow::Result<()
         Some(Subcommand::GenerateConfigSchema(gen_cli)) => {
             #[cfg(feature = "config-schema")]
             {
-                let config = codex_core::config::schema::SchemaConfig::from_git();
-                let schema = codex_core::config::schema::generate_config_schema(&config);
+                let config = codex_config_schema::SchemaConfig::from_git();
+                let schema = codex_config_schema::generate_config_schema(&config);
                 let json = serde_json::to_string_pretty(&schema)?;
                 std::fs::write(&gen_cli.out_file, json)?;
                 eprintln!("Wrote config schema to {}", gen_cli.out_file.display());

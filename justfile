@@ -50,4 +50,4 @@ mcp-server-run *args:
 
 # Generate JSON schema for codex-cli configuration
 generate-config-schema:
-    cargo run -p codex-cli --features config-schema -- generate-config-schema -o ../codex-cli/config.schema.json
+    cargo run -p codex-config-schema -- -o ../codex-cli/config.schema.json

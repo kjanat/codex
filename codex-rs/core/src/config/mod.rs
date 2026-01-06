@@ -66,8 +66,6 @@ use toml_edit::DocumentMut;
 mod constraint;
 pub mod edit;
 pub mod profile;
-#[cfg(feature = "config-schema")]
-pub mod schema;
 pub mod service;
 pub mod types;
 pub use constraint::Constrained;

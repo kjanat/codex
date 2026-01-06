@@ -33,7 +33,6 @@ codex-otel = { workspace = true }
 codex-protocol = { workspace = true }
 codex-rmcp-client = { workspace = true }
 codex-utils-absolute-path = { workspace = true }
-codex-utils-json-sort = { workspace = true, optional = true }
 codex-utils-pty = { workspace = true }
 codex-utils-readiness = { workspace = true }
 codex-utils-string = { workspace = true }
@@ -136,11 +135,7 @@ keyring = { workspace = true, features = ["windows-native"] }
 openssl-sys = { workspace = true, features = ["vendored"] }
 
 [features]
-config-schema = [
-    "codex-rmcp-client/config-schema",
-    "dep:codex-utils-json-sort",
-    "dep:schemars"
-]
+config-schema = ["codex-rmcp-client/config-schema", "dep:schemars"]
 deterministic_process_ids = []
 test-support = []
 

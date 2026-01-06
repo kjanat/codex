@@ -22,6 +22,7 @@ codex-arg0 = { workspace = true }
 codex-chatgpt = { workspace = true }
 codex-cloud-tasks = { path = "../cloud-tasks" }
 codex-common = { workspace = true, features = ["cli"] }
+codex-config-schema = { workspace = true, optional = true }
 codex-core = { workspace = true }
 codex-exec = { workspace = true }
 codex-execpolicy = { workspace = true }
@@ -64,7 +65,7 @@ codex_windows_sandbox = { package = "codex-windows-sandbox", path = "../windows-
 
 [features]
 default = []
-config-schema = ["codex-core/config-schema"]
+config-schema = ["codex-core/config-schema", "dep:codex-config-schema"]
 
 [lints]
 workspace = true
