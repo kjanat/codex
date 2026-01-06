@@ -7,8 +7,8 @@ license.workspace = true
 [dependencies]
 anyhow = "1"
 axum = { workspace = true, default-features = false, features = [
-  "http1",
-  "tokio",
+    "http1",
+    "tokio",
 ] }
 codex-keyring-store = { workspace = true }
 codex-protocol = { workspace = true }
