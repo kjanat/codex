@@ -329,6 +329,16 @@ pub(super) fn builtin_model_presets(_auth_mode: Option<AuthMode>) -> Vec<ModelPr
         .collect()
 }
 
+/// Returns model IDs that should be shown in the picker (for schema examples).
+#[cfg(feature = "config-schema")]
+pub fn picker_model_ids() -> Vec<&'static str> {
+    PRESETS
+        .iter()
+        .filter(|preset| preset.show_in_picker)
+        .map(|preset| preset.id.as_str())
+        .collect()
+}
+
 #[cfg(any(test, feature = "test-support"))]
 pub fn all_model_presets() -> &'static Vec<ModelPreset> {
     &PRESETS

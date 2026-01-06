@@ -25,7 +25,7 @@ app-server-test-client *args:
 
 # format code
 fmt:
-    cargo fmt -- --config imports_granularity=Item
+    rustup run nightly cargo fmt -- --config imports_granularity=Item
 
 fix *args:
     cargo clippy --fix --all-features --tests --allow-dirty "$@"
@@ -47,3 +47,7 @@ test:
 # Run the MCP server
 mcp-server-run *args:
     cargo run -p codex-mcp-server -- "$@"
+
+# Generate JSON schema for codex-cli configuration
+generate-config-schema:
+    cargo run -p codex-cli --features config-schema -- generate-config-schema -o ../codex-cli/config.schema.json
