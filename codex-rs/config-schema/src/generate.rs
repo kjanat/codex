@@ -6,9 +6,7 @@ use codex_git::read_default_branch;
 use codex_git::read_origin_url;
 use codex_utils_json_sort::JSON_SCHEMA_SORT_CONFIG;
 use codex_utils_json_sort::sort_json_keys_with_config;
-use schemars::Schema;
 use schemars::generate::SchemaSettings;
-use schemars::transform::RecursiveTransform;
 
 use crate::ordering::reorder_config_toml_properties;
 use crate::ordering::reorder_features_properties;
@@ -122,9 +120,7 @@ fn build_schema_id(config: &SchemaConfig) -> Option<String> {
 /// std::fs::write("config.schema.json", json).unwrap();
 /// ```
 pub fn generate_config_schema(config: &SchemaConfig) -> serde_json::Value {
-    let settings =
-        SchemaSettings::draft07().with_transform(RecursiveTransform(flatten_mcp_server_config));
-    let generator = settings.into_generator();
+    let generator = SchemaSettings::draft07().into_generator();
     let schema = generator.into_root_schema_for::<ConfigToml>();
 
     // Convert to serde_json::Value
@@ -136,17 +132,6 @@ pub fn generate_config_schema(config: &SchemaConfig) -> serde_json::Value {
     {
         obj.insert("$id".to_string(), serde_json::json!(id));
     }
-
-    // Add Tombi TOML version hint for v1.1.0 features (trailing commas, etc.)
-    if let Some(obj) = value.as_object_mut() {
-        obj.insert(
-            "x-tombi-toml-version".to_string(),
-            serde_json::json!("v1.1.0"),
-        );
-    }
-
-    // Add model examples derived from presets
-    inject_model_examples(&mut value);
 
     // Add feature properties with descriptions derived from Feature enum
     inject_feature_properties(&mut value);
@@ -162,43 +147,6 @@ pub fn generate_config_schema(config: &SchemaConfig) -> serde_json::Value {
     reorder_features_properties(&mut sorted);
 
     sorted
-}
-
-/// Inject model examples into the `model` and `review_model` fields.
-///
-/// Examples are derived from the model presets with `show_in_picker: true`.
-fn inject_model_examples(schema: &mut serde_json::Value) {
-    let model_ids = codex_core::models_manager::model_presets::picker_model_ids();
-    let examples: Vec<serde_json::Value> =
-        model_ids.iter().map(|id| serde_json::json!(id)).collect();
-
-    if examples.is_empty() {
-        return;
-    }
-
-    let Some(obj) = schema.as_object_mut() else {
-        return;
-    };
-    let Some(props) = obj.get_mut("properties") else {
-        return;
-    };
-    let Some(props_obj) = props.as_object_mut() else {
-        return;
-    };
-
-    // Add examples to `model` field
-    if let Some(model_prop) = props_obj.get_mut("model")
-        && let Some(model_obj) = model_prop.as_object_mut()
-    {
-        model_obj.insert("examples".to_string(), serde_json::json!(examples));
-    }
-
-    // Add examples to `review_model` field (same examples)
-    if let Some(review_prop) = props_obj.get_mut("review_model")
-        && let Some(review_obj) = review_prop.as_object_mut()
-    {
-        review_obj.insert("examples".to_string(), serde_json::json!(examples));
-    }
 }
 
 /// Inject feature properties with descriptions into the FeaturesToml definition.
@@ -261,157 +209,6 @@ fn inject_feature_properties(schema: &mut serde_json::Value) {
     features_obj.insert(
         "properties".to_string(),
         serde_json::Value::Object(properties),
-    );
-}
-
-/// Flatten McpServerConfig's transport enum into a single object schema.
-///
-/// The actual TOML structure accepts either:
-/// - `command` + `args` + `env` + `env_vars` + `cwd` (stdio transport)
-/// - `url` + `bearer_token_env_var` + `http_headers` + `env_http_headers` (http transport)
-///
-/// Plus shared fields: `enabled`, `startup_timeout_sec`, `tool_timeout_sec`,
-/// `enabled_tools`, `disabled_tools`.
-///
-/// Schemars generates an `anyOf` with nested transport variants, but we want a flat
-/// object with all properties merged and a `oneOf` constraint for the required fields.
-///
-/// Detection is by structure: we look for schemas that have both:
-/// - `properties` containing shared MCP fields (`enabled`, `enabled_tools`)
-/// - `anyOf` with variants containing `command` (stdio) or `url` (http)
-fn flatten_mcp_server_config(schema: &mut Schema) {
-    let Some(obj) = schema.as_object_mut() else {
-        return;
-    };
-
-    // Detect McpServerConfig by structure:
-    // 1. Has "properties" with shared fields (enabled, enabled_tools)
-    // 2. Has "anyOf" array
-    // 3. The anyOf variants have properties with "command" or "url"
-    let has_shared_props = obj
-        .get("properties")
-        .and_then(|p| p.as_object())
-        .is_some_and(|props| props.contains_key("enabled") && props.contains_key("enabled_tools"));
-
-    if !has_shared_props {
-        return;
-    }
-
-    let Some(any_of) = obj.get("anyOf") else {
-        return;
-    };
-
-    let Some(variants) = any_of.as_array() else {
-        return;
-    };
-
-    // Verify the anyOf contains transport variants (one with "command", one with "url")
-    let has_stdio_variant = variants.iter().any(|v| {
-        v.as_object()
-            .and_then(|o| o.get("properties"))
-            .and_then(|p| p.as_object())
-            .is_some_and(|props| props.contains_key("command"))
-    });
-
-    let has_http_variant = variants.iter().any(|v| {
-        v.as_object()
-            .and_then(|o| o.get("properties"))
-            .and_then(|p| p.as_object())
-            .is_some_and(|props| props.contains_key("url"))
-    });
-
-    if !has_stdio_variant || !has_http_variant {
-        return;
-    }
-
-    // Now we're confident this is McpServerConfig - perform the transform
-    let Some(any_of) = obj.remove("anyOf") else {
-        return;
-    };
-    let Some(variants) = any_of.as_array() else {
-        return;
-    };
-
-    let mut all_properties = serde_json::Map::new();
-    let mut stdio_required = Vec::new();
-    let mut http_required = Vec::new();
-
-    for variant in variants {
-        if let Some(variant_obj) = variant.as_object()
-            && let Some(props) = variant_obj.get("properties")
-            && let Some(props_obj) = props.as_object()
-        {
-            let is_stdio = props_obj.contains_key("command");
-            let is_http = props_obj.contains_key("url");
-
-            // Collect required fields
-            if let Some(req) = variant_obj.get("required")
-                && let Some(req_arr) = req.as_array()
-            {
-                let reqs: Vec<String> = req_arr
-                    .iter()
-                    .filter_map(|v| v.as_str().map(String::from))
-                    .collect();
-                if is_stdio {
-                    stdio_required = reqs;
-                } else if is_http {
-                    http_required = reqs;
-                }
-            }
-
-            // Merge properties
-            for (key, value) in props_obj {
-                all_properties.insert(key.clone(), value.clone());
-            }
-        }
-    }
-
-    // Merge with existing properties (shared fields)
-    if let Some(existing_props) = obj.get("properties")
-        && let Some(existing_obj) = existing_props.as_object()
-    {
-        for (key, value) in existing_obj {
-            if !all_properties.contains_key(key) {
-                all_properties.insert(key.clone(), value.clone());
-            }
-        }
-    }
-
-    // Set merged properties (ordering is done later by reorder_mcp_server_config_properties)
-    obj.insert(
-        "properties".to_string(),
-        serde_json::Value::Object(all_properties),
-    );
-
-    // Add oneOf for transport requirement
-    obj.insert(
-        "oneOf".to_string(),
-        serde_json::json!([
-            {"required": stdio_required},
-            {"required": http_required}
-        ]),
-    );
-
-    // Use "schema" ordering - Tombi will use the order from our properties object
-    // (reordered by reorder_mcp_server_config_properties after sort_json_keys_with_config)
-    obj.insert(
-        "x-tombi-table-keys-order".to_string(),
-        serde_json::json!("schema"),
-    );
-
-    // Set type to object
-    obj.insert("type".to_string(), serde_json::json!("object"));
-
-    // Remove additionalProperties: false if present (allow forward compatibility)
-    obj.remove("additionalProperties");
-
-    // Clear top-level required (the oneOf handles transport requirements)
-    obj.remove("required");
-
-    // Update description
-    obj.insert(
-        "description".to_string(),
-        serde_json::json!("MCP server configuration. Must specify either 'command' (stdio transport) or 'url' (HTTP transport)."),
     );
 }
 

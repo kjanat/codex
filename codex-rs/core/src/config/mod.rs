@@ -66,6 +66,8 @@ use toml_edit::DocumentMut;
 mod constraint;
 pub mod edit;
 pub mod profile;
+#[cfg(feature = "config-schema")]
+pub mod schema_transforms;
 pub mod service;
 pub mod types;
 pub use constraint::Constrained;
@@ -680,13 +682,24 @@ pub fn set_default_oss_provider(codex_home: &Path, provider: &str) -> std::io::R
     feature = "config-schema",
     schemars(
         title = "Codex configuration file",
-        extend("x-tombi-table-keys-order" = "schema")
+        extend(
+            "x-tombi-table-keys-order" = "schema",
+            "x-tombi-toml-version" = "v1.1.0"
+        )
     )
 )]
 pub struct ConfigToml {
     /// Optional override of model selection.
+    #[cfg_attr(
+        feature = "config-schema",
+        schemars(extend("examples" = crate::models_manager::model_presets::picker_model_ids()))
+    )]
     pub model: Option<String>,
     /// Review model override used by the `/review` feature.
+    #[cfg_attr(
+        feature = "config-schema",
+        schemars(extend("examples" = crate::models_manager::model_presets::picker_model_ids()))
+    )]
     pub review_model: Option<String>,
 
     /// Provider to use from the model_providers map.

@@ -22,6 +22,10 @@ pub const DEFAULT_OTEL_ENVIRONMENT: &str = "dev";
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "config-schema", derive(JsonSchema))]
+#[cfg_attr(
+    feature = "config-schema",
+    schemars(transform = crate::config::schema_transforms::flatten_mcp_server_config)
+)]
 pub struct McpServerConfig {
     #[serde(flatten)]
     pub transport: McpServerTransportConfig,

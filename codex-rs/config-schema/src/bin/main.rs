@@ -21,15 +21,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn parse_output_arg(args: &[String]) -> Result<PathBuf, &'static str> {
+fn parse_output_arg(args: &[String]) -> Result<PathBuf, String> {
+    let program_name = args.first().map_or("program", String::as_str);
     let mut iter = args.iter().skip(1); // Skip program name
     while let Some(arg) = iter.next() {
         if arg == "-o" || arg == "--out" {
             if let Some(path) = iter.next() {
                 return Ok(PathBuf::from(path));
             }
-            return Err("Missing output file path after -o/--out");
+            return Err("Missing output file path after -o/--out".to_string());
         }
     }
-    Err("Usage: codex-config-schema -o <output-file>")
+    Err(format!("Usage: {program_name} -o <output-file>"))
 }

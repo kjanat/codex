@@ -21,11 +21,22 @@ pub fn find_git_dir() -> Option<PathBuf> {
             return Some(git_path);
         }
         // Worktree: .git is a file containing "gitdir: /path/to/real/.git"
+        // The path can be absolute or relative to the .git file's parent directory
         if git_path.is_file()
             && let Ok(content) = fs::read_to_string(&git_path)
             && let Some(path) = content.trim().strip_prefix("gitdir: ")
         {
-            return Some(PathBuf::from(path));
+            let gitdir_path = Path::new(path);
+            if gitdir_path.is_absolute() {
+                return Some(gitdir_path.to_path_buf());
+            }
+            // Relative path: resolve against the .git file's parent directory
+            if let Some(parent) = git_path.parent() {
+                let resolved = parent.join(gitdir_path);
+                // Canonicalize to normalize ".." components, fall back to joined path
+                return Some(resolved.canonicalize().unwrap_or(resolved));
+            }
+            return Some(gitdir_path.to_path_buf());
         }
         if !dir.pop() {
             return None;
@@ -171,5 +182,72 @@ mod tests {
     fn test_read_default_branch_no_file() {
         let tmp = TempDir::new().unwrap();
         assert_eq!(read_default_branch(tmp.path()), None);
+    }
+
+    #[test]
+    fn test_find_git_dir_worktree_relative_path() {
+        // Simulate a worktree structure:
+        // tmp/
+        //   main-repo/.git/           (real git dir)
+        //   main-repo/.git/worktrees/feature/  (worktree git dir)
+        //   worktree/.git             (file with relative gitdir)
+        let tmp = TempDir::new().unwrap();
+        let main_repo = tmp.path().join("main-repo");
+        let main_git = main_repo.join(".git");
+        let worktree_git_dir = main_git.join("worktrees/feature");
+        let worktree_dir = tmp.path().join("worktree");
+
+        // Create the main repo's git directory structure
+        fs::create_dir_all(&worktree_git_dir).unwrap();
+
+        // Create worktree with relative gitdir reference
+        fs::create_dir_all(&worktree_dir).unwrap();
+        fs::write(
+            worktree_dir.join(".git"),
+            "gitdir: ../main-repo/.git/worktrees/feature\n",
+        )
+        .unwrap();
+
+        // Change to worktree directory and find git dir
+        let original_dir = std::env::current_dir().unwrap();
+        std::env::set_current_dir(&worktree_dir).unwrap();
+
+        let result = find_git_dir();
+        std::env::set_current_dir(original_dir).unwrap();
+
+        // Should resolve to the absolute path of the worktree git dir
+        let result = result.expect("should find git dir");
+        assert!(
+            result.ends_with("worktrees/feature"),
+            "expected path ending with 'worktrees/feature', got: {result:?}"
+        );
+        assert!(result.is_absolute(), "result should be absolute path");
+    }
+
+    #[test]
+    fn test_find_git_dir_worktree_absolute_path() {
+        let tmp = TempDir::new().unwrap();
+        let main_git = tmp.path().join("main-repo/.git");
+        let worktree_git_dir = main_git.join("worktrees/feature");
+        let worktree_dir = tmp.path().join("worktree");
+
+        fs::create_dir_all(&worktree_git_dir).unwrap();
+        fs::create_dir_all(&worktree_dir).unwrap();
+
+        // Write absolute path
+        fs::write(
+            worktree_dir.join(".git"),
+            format!("gitdir: {}\n", worktree_git_dir.display()),
+        )
+        .unwrap();
+
+        let original_dir = std::env::current_dir().unwrap();
+        std::env::set_current_dir(&worktree_dir).unwrap();
+
+        let result = find_git_dir();
+        std::env::set_current_dir(original_dir).unwrap();
+
+        let result = result.expect("should find git dir");
+        assert_eq!(result, worktree_git_dir);
     }
 }

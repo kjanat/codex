@@ -136,8 +136,10 @@ fn sort_inner(value: Value, parent_key: Option<&str>, config: &SortConfig) -> Va
         }
         Value::Array(mut arr) => {
             // Sort array elements if this key is in sorted_array_keys
-            if config.should_sort_array(parent_key) {
+            // Only sort if ALL elements are strings to avoid unstable ordering
+            if config.should_sort_array(parent_key) && arr.iter().all(Value::is_string) {
                 arr.sort_by(|a, b| {
+                    // Safe: we verified all elements are strings above
                     let a_str = a.as_str().unwrap_or("");
                     let b_str = b.as_str().unwrap_or("");
                     a_str.cmp(b_str)
@@ -373,6 +375,56 @@ mod tests {
         assert_eq!(
             required,
             &vec![json!("zebra"), json!("apple"), json!("mango")]
+        );
+    }
+
+    #[test]
+    fn test_mixed_type_array_preserves_order() {
+        let config = SortConfig {
+            priority_keys: &[],
+            sorted_array_keys: &["examples"],
+        };
+
+        // Mixed-type array: strings, numbers, booleans, null, objects
+        let input = json!({
+            "examples": ["zebra", 42, true, null, {"key": "value"}, "apple"]
+        });
+
+        let sorted = sort_json_keys_with_config(input, &config);
+        let examples = sorted["examples"].as_array().unwrap();
+
+        // Order should be preserved since not all elements are strings
+        assert_eq!(
+            examples,
+            &vec![
+                json!("zebra"),
+                json!(42),
+                json!(true),
+                json!(null),
+                json!({"key": "value"}),
+                json!("apple")
+            ]
+        );
+    }
+
+    #[test]
+    fn test_all_strings_array_is_sorted() {
+        let config = SortConfig {
+            priority_keys: &[],
+            sorted_array_keys: &["examples"],
+        };
+
+        let input = json!({
+            "examples": ["zebra", "apple", "mango"]
+        });
+
+        let sorted = sort_json_keys_with_config(input, &config);
+        let examples = sorted["examples"].as_array().unwrap();
+
+        // All strings, so should be sorted
+        assert_eq!(
+            examples,
+            &vec![json!("apple"), json!("mango"), json!("zebra")]
         );
     }
 }
