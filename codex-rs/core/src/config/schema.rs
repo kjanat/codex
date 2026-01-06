@@ -6,9 +6,9 @@
 //!
 //! This module is only available when the `config-schema` feature is enabled.
 
-use std::path::Path;
-use std::path::PathBuf;
-
+use codex_git::find_git_dir;
+use codex_git::read_default_branch;
+use codex_git::read_origin_url;
 use codex_utils_json_sort::sort_json_keys;
 use schemars::Schema;
 use schemars::generate::SchemaSettings;
@@ -52,59 +52,6 @@ impl SchemaConfig {
 
         config
     }
-}
-
-/// Find `.git` directory by walking up from current dir.
-/// Handles worktrees where `.git` is a file containing `gitdir: /path/to/.git`.
-fn find_git_dir() -> Option<PathBuf> {
-    let mut dir = std::env::current_dir().ok()?;
-    loop {
-        let git_path = dir.join(".git");
-        if git_path.is_dir() {
-            return Some(git_path);
-        }
-        // Worktree: .git is a file containing "gitdir: /path/to/real/.git"
-        if git_path.is_file() {
-            if let Ok(content) = std::fs::read_to_string(&git_path) {
-                if let Some(path) = content.trim().strip_prefix("gitdir: ") {
-                    return Some(PathBuf::from(path));
-                }
-            }
-        }
-        if !dir.pop() {
-            return None;
-        }
-    }
-}
-
-/// Parse origin URL from `.git/config`.
-fn read_origin_url(git_dir: &Path) -> Option<String> {
-    let config_path = git_dir.join("config");
-    let content = std::fs::read_to_string(config_path).ok()?;
-
-    let mut in_origin_section = false;
-    for line in content.lines() {
-        let trimmed = line.trim();
-        if trimmed.starts_with('[') {
-            in_origin_section = trimmed == r#"[remote "origin"]"#;
-        } else if in_origin_section && trimmed.starts_with("url") {
-            // Parse "url = https://..."
-            return trimmed.split('=').nth(1).map(|s| s.trim().to_string());
-        }
-    }
-    None
-}
-
-/// Read default branch from `.git/refs/remotes/origin/HEAD`.
-fn read_default_branch(git_dir: &Path) -> Option<String> {
-    let head_path = git_dir.join("refs/remotes/origin/HEAD");
-    let content = std::fs::read_to_string(head_path).ok()?;
-
-    // Format: "ref: refs/remotes/origin/master"
-    content
-        .trim()
-        .strip_prefix("ref: refs/remotes/origin/")
-        .map(|s| s.to_string())
 }
 
 /// Parse owner and repo from a GitHub git URL.
