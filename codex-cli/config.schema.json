@@ -32,6 +32,7 @@
     },
     "cli_auth_credentials_store": {
       "description": "Preferred backend for storing CLI auth credentials.\nfile (default): Use a file in the Codex home directory.\nkeyring: Use an OS-specific keyring service.\nauto: Use the keyring if available, otherwise use a file.",
+      "default": null,
       "anyOf": [
         {
           "$ref": "#/definitions/AuthCredentialsStoreMode"
@@ -39,8 +40,7 @@
         {
           "type": "null"
         }
-      ],
-      "default": null
+      ]
     },
     "compact_prompt": {
       "description": "Compact prompt used for history compaction.",
@@ -106,6 +106,7 @@
     },
     "features": {
       "description": "Centralized feature flags (new). Prefer this over individual toggles.",
+      "default": null,
       "anyOf": [
         {
           "$ref": "#/definitions/FeaturesToml"
@@ -113,8 +114,7 @@
         {
           "type": "null"
         }
-      ],
-      "default": null
+      ]
     },
     "file_opener": {
       "description": "Optional URI-based file opener. If set, citations to files in the model\noutput will be hyperlinked using the specified URI scheme.",
@@ -137,6 +137,7 @@
     },
     "forced_login_method": {
       "description": "When set, restricts the login mechanism users may use.",
+      "default": null,
       "anyOf": [
         {
           "$ref": "#/definitions/ForcedLoginMethod"
@@ -144,11 +145,11 @@
         {
           "type": "null"
         }
-      ],
-      "default": null
+      ]
     },
     "ghost_snapshot": {
       "description": "Settings for ghost snapshots (used for undo).",
+      "default": null,
       "anyOf": [
         {
           "$ref": "#/definitions/GhostSnapshotToml"
@@ -156,8 +157,7 @@
         {
           "type": "null"
         }
-      ],
-      "default": null
+      ]
     },
     "hide_agent_reasoning": {
       "description": "When set to `true`, `AgentReasoning` events will be hidden from the\nUI/output. Defaults to `false`.",
@@ -168,6 +168,7 @@
     },
     "history": {
       "description": "Settings that govern if and what will be written to `~/.codex/history.jsonl`.",
+      "default": null,
       "anyOf": [
         {
           "$ref": "#/definitions/History"
@@ -175,8 +176,7 @@
         {
           "type": "null"
         }
-      ],
-      "default": null
+      ]
     },
     "instructions": {
       "description": "System instructions.",
@@ -187,6 +187,7 @@
     },
     "mcp_oauth_credentials_store": {
       "description": "Preferred backend for storing MCP OAuth credentials.\nkeyring: Use an OS-specific keyring service.\n         https://github.com/openai/codex/blob/main/codex-rs/rmcp-client/src/oauth.rs#L2\nfile: Use a file in the Codex home directory.\nauto (default): Use the OS-specific keyring service if available, otherwise use a file.",
+      "default": null,
       "anyOf": [
         {
           "$ref": "#/definitions/OAuthCredentialsStoreMode"
@@ -194,15 +195,14 @@
         {
           "type": "null"
         }
-      ],
-      "default": null
+      ]
     },
     "mcp_servers": {
       "description": "Definition for MCP servers that Codex can reach out to for tool calls.",
+      "type": "object",
       "additionalProperties": {
         "$ref": "#/definitions/McpServerConfig"
       },
-      "type": "object",
       "default": {}
     },
     "model": {
@@ -243,10 +243,10 @@
     },
     "model_providers": {
       "description": "User-defined provider entries that extend/override the built-in list.",
+      "type": "object",
       "additionalProperties": {
         "$ref": "#/definitions/ModelProviderInfo"
       },
-      "type": "object",
       "default": {}
     },
     "model_reasoning_effort": {
@@ -336,10 +336,10 @@
     },
     "profiles": {
       "description": "Named profiles to facilitate switching between different configurations.",
+      "type": "object",
       "additionalProperties": {
         "$ref": "#/definitions/ConfigProfile"
       },
-      "type": "object",
       "default": {}
     },
     "project_doc_fallback_filenames": {
@@ -373,13 +373,13 @@
       }
     },
     "projects": {
-      "additionalProperties": {
-        "$ref": "#/definitions/ProjectConfig"
-      },
       "type": [
         "object",
         "null"
-      ]
+      ],
+      "additionalProperties": {
+        "$ref": "#/definitions/ProjectConfig"
+      }
     },
     "review_model": {
       "description": "Review model override used by the `/review` feature.",
@@ -417,11 +417,6 @@
       ]
     },
     "shell_environment_policy": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/ShellEnvironmentPolicyToml"
-        }
-      ],
       "default": {
         "exclude": null,
         "experimental_use_profile": null,
@@ -429,7 +424,12 @@
         "include_only": null,
         "inherit": null,
         "set": null
-      }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/ShellEnvironmentPolicyToml"
+        }
+      ]
     },
     "show_raw_agent_reasoning": {
       "description": "When set to `true`, `AgentReasoningRawContentEvent` events will be shown in the UI/output.\nDefaults to `false`.",
@@ -582,6 +582,7 @@
         },
         "features": {
           "description": "Optional feature toggles scoped to this profile.",
+          "default": null,
           "anyOf": [
             {
               "$ref": "#/definitions/FeaturesToml"
@@ -589,8 +590,7 @@
             {
               "type": "null"
             }
-          ],
-          "default": null
+          ]
         },
         "include_apply_patch_tool": {
           "type": [
@@ -673,10 +673,10 @@
     },
     "FeaturesToml": {
       "description": "Deserializable features table for TOML.",
+      "type": "object",
       "additionalProperties": {
         "type": "boolean"
       },
-      "type": "object",
       "properties": {
         "apply_patch_freeform": {
           "description": "[Experimental] Include the freeform apply_patch tool.",
@@ -893,23 +893,23 @@
           }
         },
         "env": {
-          "additionalProperties": {
-            "type": "string"
-          },
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "env_http_headers": {
           "description": "HTTP headers where the value is sourced from an environment variable.",
-          "additionalProperties": {
-            "type": "string"
-          },
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "env_vars": {
           "type": "array",
@@ -919,13 +919,13 @@
         },
         "http_headers": {
           "description": "Additional HTTP headers to include in requests to this server.",
-          "additionalProperties": {
-            "type": "string"
-          },
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "startup_timeout_sec": {
           "description": "Startup timeout in seconds for initializing MCP server & initially listing tools.",
@@ -978,13 +978,13 @@
         },
         "env_http_headers": {
           "description": "Optional HTTP headers to include in requests to this provider where the\n(key, value) pairs are the header name and _environment variable_ whose\nvalue should be used. If the environment variable is not set, or the\nvalue is empty, the header will not be included in the request.",
-          "additionalProperties": {
-            "type": "string"
-          },
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "env_key": {
           "description": "Environment variable that stores the user's API key for this provider.",
@@ -1009,23 +1009,23 @@
         },
         "http_headers": {
           "description": "Additional HTTP headers to include in requests to this provider where\nthe (key, value) pairs are the header name and value.",
-          "additionalProperties": {
-            "type": "string"
-          },
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "query_params": {
           "description": "Optional query parameters to append to the base URL.",
-          "additionalProperties": {
-            "type": "string"
-          },
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "request_max_retries": {
           "description": "Maximum number of times to retry a failed HTTP request to this provider.",
@@ -1061,12 +1061,12 @@
         },
         "wire_api": {
           "description": "Which wire protocol this provider expects.",
+          "default": "chat",
           "allOf": [
             {
               "$ref": "#/definitions/WireApi"
             }
-          ],
-          "default": "chat"
+          ]
         }
       },
       "required": [
@@ -1114,10 +1114,10 @@
         },
         "model_migrations": {
           "description": "Tracks acknowledged model migrations as old->new model slug mappings.",
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "type": "object",
           "default": {}
         }
       }
@@ -1207,8 +1207,8 @@
           ]
         },
         {
-          "additionalProperties": false,
           "type": "object",
+          "additionalProperties": false,
           "properties": {
             "otlp-http": {
               "type": "object",
@@ -1217,16 +1217,17 @@
                   "type": "string"
                 },
                 "headers": {
+                  "type": "object",
                   "additionalProperties": {
                     "type": "string"
                   },
-                  "type": "object",
                   "default": {}
                 },
                 "protocol": {
                   "$ref": "#/definitions/OtelHttpProtocol"
                 },
                 "tls": {
+                  "default": null,
                   "anyOf": [
                     {
                       "$ref": "#/definitions/OtelTlsConfig"
@@ -1234,8 +1235,7 @@
                     {
                       "type": "null"
                     }
-                  ],
-                  "default": null
+                  ]
                 }
               },
               "required": [
@@ -1249,8 +1249,8 @@
           ]
         },
         {
-          "additionalProperties": false,
           "type": "object",
+          "additionalProperties": false,
           "properties": {
             "otlp-grpc": {
               "type": "object",
@@ -1259,13 +1259,14 @@
                   "type": "string"
                 },
                 "headers": {
+                  "type": "object",
                   "additionalProperties": {
                     "type": "string"
                   },
-                  "type": "object",
                   "default": {}
                 },
                 "tls": {
+                  "default": null,
                   "anyOf": [
                     {
                       "$ref": "#/definitions/OtelTlsConfig"
@@ -1273,8 +1274,7 @@
                     {
                       "type": "null"
                     }
-                  ],
-                  "default": null
+                  ]
                 }
               },
               "required": [
@@ -1500,13 +1500,13 @@
           ]
         },
         "set": {
-          "additionalProperties": {
-            "type": "string"
-          },
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     },
@@ -1554,12 +1554,12 @@
         },
         "notifications": {
           "description": "Enable desktop notifications from the TUI when the terminal is unfocused.\nDefaults to `true`.",
+          "default": true,
           "allOf": [
             {
               "$ref": "#/definitions/Notifications"
             }
-          ],
-          "default": true
+          ]
         },
         "scroll_events_per_tick": {
           "description": "Override the *wheel* event density used to normalize TUI2 scrolling.\n\nTerminals generally deliver both mouse wheels and trackpads as discrete `scroll up/down`\nmouse events with direction but no magnitude. Unfortunately, the *number* of raw events\nper physical wheel notch varies by terminal (commonly 1, 3, or 9+). TUI2 uses this value\nto normalize that raw event density into consistent \"wheel tick\" behavior.\n\nWheel math (conceptually):\n\n- A single event contributes `1 / scroll_events_per_tick` tick-equivalents.\n- Wheel-like streams then scale that by `scroll_wheel_lines` so one physical notch scrolls\n  a fixed number of lines.\n\nTrackpad math is intentionally *not* fully tied to this value: in trackpad-like mode, TUI2\nuses `min(scroll_events_per_tick, 3)` as the divisor so terminals with dense wheel ticks\n(e.g. 9 events per notch) do not make trackpads feel artificially slow.\n\nDefaults are derived per terminal from [`crate::terminal::TerminalInfo`] when TUI2 starts.\nSee `codex-rs/tui2/docs/scroll_input_model.md` for the probe data and rationale.",
@@ -1578,12 +1578,12 @@
         },
         "scroll_mode": {
           "description": "Select how TUI2 interprets mouse scroll input.\n\n- `auto` (default): infer wheel vs trackpad per scroll stream.\n- `wheel`: always use wheel behavior (fixed lines per wheel notch).\n- `trackpad`: always use trackpad behavior (fractional accumulation; wheel may feel slow).",
+          "default": "auto",
           "allOf": [
             {
               "$ref": "#/definitions/ScrollInputMode"
             }
-          ],
-          "default": "auto"
+          ]
         },
         "scroll_trackpad_accel_events": {
           "description": "Trackpad acceleration: approximate number of events required to gain +1x speed in TUI2.\n\nThis keeps small swipes precise while allowing large/faster swipes to cover more content.\nDefaults are chosen to address terminals where trackpad event density is comparatively low.\n\nConcretely, TUI2 computes an acceleration multiplier for trackpad-like streams:\n\n- `multiplier = clamp(1 + abs(events) / scroll_trackpad_accel_events, 1..scroll_trackpad_accel_max)`\n\nThe multiplier is applied to the stream’s computed line delta (including any carried\nfractional remainder).",

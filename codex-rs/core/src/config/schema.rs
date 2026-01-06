@@ -30,8 +30,8 @@ pub struct SchemaConfig {
 impl Default for SchemaConfig {
     fn default() -> Self {
         Self {
-            repo_url: None,
-            default_branch: None,
+            repo_url: Some("https://github.com/openai/codex.git".to_string()),
+            default_branch: Some("main".to_string()),
             schema_path: "codex-cli/config.schema.json".to_string(),
         }
     }
@@ -47,7 +47,9 @@ impl SchemaConfig {
 
         if let Some(git_dir) = find_git_dir() {
             config.repo_url = read_origin_url(&git_dir);
-            config.default_branch = read_default_branch(&git_dir);
+            if let Some(branch) = read_default_branch(&git_dir) {
+                config.default_branch = Some(branch);
+            }
         }
 
         config
@@ -67,17 +69,13 @@ fn parse_github_owner_repo(url: &str) -> Option<(String, String)> {
 
     // HTTPS: https://github.com/owner/repo
     if let Some(rest) = url.strip_prefix("https://github.com/") {
-        let mut parts = rest.splitn(2, '/');
-        let owner = parts.next()?;
-        let repo = parts.next()?;
+        let (owner, repo) = rest.split_once('/')?;
         return Some((owner.to_string(), repo.to_string()));
     }
 
     // SSH: git@github.com:owner/repo
     if let Some(rest) = url.strip_prefix("git@github.com:") {
-        let mut parts = rest.splitn(2, '/');
-        let owner = parts.next()?;
-        let repo = parts.next()?;
+        let (owner, repo) = rest.split_once('/')?;
         return Some((owner.to_string(), repo.to_string()));
     }
 
@@ -90,8 +88,7 @@ fn parse_github_owner_repo(url: &str) -> Option<(String, String)> {
 fn build_schema_id(config: &SchemaConfig) -> Option<String> {
     let url = config.repo_url.as_deref()?;
     let (owner, repo) = parse_github_owner_repo(url)?;
-
-    let branch = config.default_branch.as_deref().unwrap_or("main");
+    let branch = config.default_branch.as_deref()?;
 
     Some(format!(
         "https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{}",
@@ -135,10 +132,10 @@ pub fn generate_config_schema(config: &SchemaConfig) -> serde_json::Value {
     let mut value: serde_json::Value = schema.into();
 
     // Insert $id if we have GitHub repo info
-    if let Some(id) = build_schema_id(config) {
-        if let Some(obj) = value.as_object_mut() {
-            obj.insert("$id".to_string(), serde_json::json!(id));
-        }
+    if let Some(id) = build_schema_id(config)
+        && let Some(obj) = value.as_object_mut()
+    {
+        obj.insert("$id".to_string(), serde_json::json!(id));
     }
 
     // Add model examples derived from presets
@@ -174,17 +171,17 @@ fn inject_model_examples(schema: &mut serde_json::Value) {
     };
 
     // Add examples to `model` field
-    if let Some(model_prop) = props_obj.get_mut("model") {
-        if let Some(model_obj) = model_prop.as_object_mut() {
-            model_obj.insert("examples".to_string(), serde_json::json!(examples));
-        }
+    if let Some(model_prop) = props_obj.get_mut("model")
+        && let Some(model_obj) = model_prop.as_object_mut()
+    {
+        model_obj.insert("examples".to_string(), serde_json::json!(examples));
     }
 
     // Add examples to `review_model` field (same examples)
-    if let Some(review_prop) = props_obj.get_mut("review_model") {
-        if let Some(review_obj) = review_prop.as_object_mut() {
-            review_obj.insert("examples".to_string(), serde_json::json!(examples));
-        }
+    if let Some(review_prop) = props_obj.get_mut("review_model")
+        && let Some(review_obj) = review_prop.as_object_mut()
+    {
+        review_obj.insert("examples".to_string(), serde_json::json!(examples));
     }
 }
 
@@ -292,51 +289,54 @@ fn flatten_mcp_server_config(schema: &mut Schema) {
     }
 
     // Now we're confident this is McpServerConfig - perform the transform
-    let any_of = obj.remove("anyOf").unwrap();
-    let variants = any_of.as_array().unwrap();
+    let Some(any_of) = obj.remove("anyOf") else {
+        return;
+    };
+    let Some(variants) = any_of.as_array() else {
+        return;
+    };
 
     let mut all_properties = serde_json::Map::new();
     let mut stdio_required = Vec::new();
     let mut http_required = Vec::new();
 
     for variant in variants {
-        if let Some(variant_obj) = variant.as_object() {
-            if let Some(props) = variant_obj.get("properties") {
-                if let Some(props_obj) = props.as_object() {
-                    let is_stdio = props_obj.contains_key("command");
-                    let is_http = props_obj.contains_key("url");
+        if let Some(variant_obj) = variant.as_object()
+            && let Some(props) = variant_obj.get("properties")
+            && let Some(props_obj) = props.as_object()
+        {
+            let is_stdio = props_obj.contains_key("command");
+            let is_http = props_obj.contains_key("url");
 
-                    // Collect required fields
-                    if let Some(req) = variant_obj.get("required") {
-                        if let Some(req_arr) = req.as_array() {
-                            let reqs: Vec<String> = req_arr
-                                .iter()
-                                .filter_map(|v| v.as_str().map(String::from))
-                                .collect();
-                            if is_stdio {
-                                stdio_required = reqs;
-                            } else if is_http {
-                                http_required = reqs;
-                            }
-                        }
-                    }
-
-                    // Merge properties
-                    for (key, value) in props_obj {
-                        all_properties.insert(key.clone(), value.clone());
-                    }
+            // Collect required fields
+            if let Some(req) = variant_obj.get("required")
+                && let Some(req_arr) = req.as_array()
+            {
+                let reqs: Vec<String> = req_arr
+                    .iter()
+                    .filter_map(|v| v.as_str().map(String::from))
+                    .collect();
+                if is_stdio {
+                    stdio_required = reqs;
+                } else if is_http {
+                    http_required = reqs;
                 }
+            }
+
+            // Merge properties
+            for (key, value) in props_obj {
+                all_properties.insert(key.clone(), value.clone());
             }
         }
     }
 
     // Merge with existing properties (shared fields)
-    if let Some(existing_props) = obj.get("properties") {
-        if let Some(existing_obj) = existing_props.as_object() {
-            for (key, value) in existing_obj {
-                if !all_properties.contains_key(key) {
-                    all_properties.insert(key.clone(), value.clone());
-                }
+    if let Some(existing_props) = obj.get("properties")
+        && let Some(existing_obj) = existing_props.as_object()
+    {
+        for (key, value) in existing_obj {
+            if !all_properties.contains_key(key) {
+                all_properties.insert(key.clone(), value.clone());
             }
         }
     }
@@ -549,7 +549,10 @@ mod tests {
 
     #[test]
     fn test_schema_id_omitted_when_no_repo_url() {
-        let config = SchemaConfig::default();
+        let config = SchemaConfig {
+            repo_url: None,
+            ..Default::default()
+        };
         let schema = generate_config_schema(&config);
 
         assert!(
@@ -559,18 +562,30 @@ mod tests {
     }
 
     #[test]
-    fn test_schema_id_uses_default_branch_fallback() {
-        let config = SchemaConfig {
-            repo_url: Some("https://github.com/user/repo".to_string()),
-            default_branch: None, // No branch detected
-            schema_path: "schema.json".to_string(),
-        };
+    fn test_schema_id_uses_defaults() {
+        // SchemaConfig::default() uses openai/codex upstream
+        let config = SchemaConfig::default();
         let schema = generate_config_schema(&config);
 
         let id = schema.get("$id").expect("should have $id");
         assert_eq!(
             id,
-            "https://raw.githubusercontent.com/user/repo/main/schema.json"
+            "https://raw.githubusercontent.com/openai/codex/main/codex-cli/config.schema.json"
+        );
+    }
+
+    #[test]
+    fn test_schema_id_omitted_when_no_branch() {
+        let config = SchemaConfig {
+            repo_url: Some("https://github.com/user/repo".to_string()),
+            default_branch: None,
+            schema_path: "schema.json".to_string(),
+        };
+        let schema = generate_config_schema(&config);
+
+        assert!(
+            schema.get("$id").is_none(),
+            "should not have $id without default_branch"
         );
     }
 
@@ -636,7 +651,7 @@ mod tests {
             .get("examples")
             .expect("review_model should have examples");
         assert!(
-            review_examples.as_array().unwrap().len() > 0,
+            !review_examples.as_array().unwrap().is_empty(),
             "review_model should have non-empty examples"
         );
     }
