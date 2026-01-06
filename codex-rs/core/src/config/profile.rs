@@ -1,4 +1,6 @@
 use codex_utils_absolute_path::AbsolutePathBuf;
+#[cfg(feature = "config-schema")]
+use schemars::JsonSchema;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -11,6 +13,8 @@ use codex_protocol::openai_models::ReasoningEffort;
 /// Collection of common configuration options that a user can define as a unit
 /// in `config.toml`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "config-schema", derive(JsonSchema))]
+#[cfg_attr(feature = "config-schema", schemars(extend("x-tombi-table-keys-order" = "schema")))]
 pub struct ConfigProfile {
     pub model: Option<String>,
     /// The key in the `model_providers` map identifying the

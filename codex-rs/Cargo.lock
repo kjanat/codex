@@ -360,7 +360,7 @@ dependencies = [
  "objc2-foundation",
  "parking_lot",
  "percent-encoding",
- "windows-sys 0.52.0",
+ "windows-sys 0.60.2",
  "wl-clipboard-rs",
  "x11rb",
 ]
@@ -1017,7 +1017,7 @@ dependencies = [
  "shlex",
  "tempfile",
  "tokio",
- "toml 0.9.5",
+ "toml 0.9.10+spec-1.1.0",
  "tracing",
  "tracing-subscriber",
  "uuid",
@@ -1034,7 +1034,7 @@ dependencies = [
  "codex-utils-absolute-path",
  "mcp-types",
  "pretty_assertions",
- "schemars 0.8.22",
+ "schemars 1.2.0",
  "serde",
  "serde_json",
  "strum_macros 0.27.2",
@@ -1148,6 +1148,7 @@ dependencies = [
  "codex-chatgpt",
  "codex-cloud-tasks",
  "codex-common",
+ "codex-config-schema",
  "codex-core",
  "codex-exec",
  "codex-execpolicy",
@@ -1173,7 +1174,7 @@ dependencies = [
  "supports-color 3.0.2",
  "tempfile",
  "tokio",
- "toml 0.9.5",
+ "toml 0.9.10+spec-1.1.0",
  "tracing",
 ]
 
@@ -1255,7 +1256,19 @@ dependencies = [
  "codex-utils-absolute-path",
  "pretty_assertions",
  "serde",
- "toml 0.9.5",
+ "toml 0.9.10+spec-1.1.0",
+]
+
+[[package]]
+name = "codex-config-schema"
+version = "0.0.0"
+dependencies = [
+ "codex-core",
+ "codex-git",
+ "codex-utils-json-sort",
+ "pretty_assertions",
+ "schemars 1.2.0",
+ "serde_json",
 ]
 
 [[package]]
@@ -1319,6 +1332,7 @@ dependencies = [
  "regex",
  "regex-lite",
  "reqwest",
+ "schemars 1.2.0",
  "seccompiler",
  "serde",
  "serde_json",
@@ -1335,7 +1349,7 @@ dependencies = [
  "time",
  "tokio",
  "tokio-util",
- "toml 0.9.5",
+ "toml 0.9.10+spec-1.1.0",
  "toml_edit 0.24.0+spec-1.1.0",
  "tracing",
  "tracing-subscriber",
@@ -1480,7 +1494,7 @@ dependencies = [
  "once_cell",
  "pretty_assertions",
  "regex",
- "schemars 0.8.22",
+ "schemars 1.2.0",
  "serde",
  "tempfile",
  "thiserror 2.0.17",
@@ -1556,13 +1570,14 @@ dependencies = [
  "codex-common",
  "codex-core",
  "codex-protocol",
+ "codex-utils-json-sort",
  "codex-utils-json-to-toml",
  "core_test_support",
  "mcp-types",
  "mcp_test_support",
  "os_info",
  "pretty_assertions",
- "schemars 0.8.22",
+ "schemars 1.2.0",
  "serde",
  "serde_json",
  "shlex",
@@ -1637,7 +1652,7 @@ dependencies = [
  "mcp-types",
  "mime_guess",
  "pretty_assertions",
- "schemars 0.8.22",
+ "schemars 1.2.0",
  "serde",
  "serde_json",
  "serde_with",
@@ -1683,6 +1698,7 @@ dependencies = [
  "pretty_assertions",
  "reqwest",
  "rmcp",
+ "schemars 1.2.0",
  "serde",
  "serde_json",
  "serial_test",
@@ -1763,7 +1779,7 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tokio-util",
- "toml 0.9.5",
+ "toml 0.9.10+spec-1.1.0",
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
@@ -1836,7 +1852,7 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tokio-util",
- "toml 0.9.5",
+ "toml 0.9.10+spec-1.1.0",
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
@@ -1855,7 +1871,7 @@ name = "codex-utils-absolute-path"
 version = "0.0.0"
 dependencies = [
  "path-absolutize",
- "schemars 0.8.22",
+ "schemars 1.2.0",
  "serde",
  "serde_json",
  "tempfile",
@@ -1892,12 +1908,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "codex-utils-json-sort"
+version = "0.0.0"
+dependencies = [
+ "pretty_assertions",
+ "serde_json",
+]
+
+[[package]]
 name = "codex-utils-json-to-toml"
 version = "0.0.0"
 dependencies = [
  "pretty_assertions",
  "serde_json",
- "toml 0.9.5",
+ "toml 0.9.10+spec-1.1.0",
 ]
 
 [[package]]
@@ -2781,7 +2805,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "778e2ac28f6c47af28e4907f13ffd1e1ddbd400980a9abd7c8df189bf578a5ad"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -2889,7 +2913,7 @@ checksum = "0ce92ff622d6dadf7349484f42c93271a0d49b7cc4d466a936405bacbe10aa78"
 dependencies = [
  "cfg-if",
  "rustix 1.0.8",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -3830,7 +3854,7 @@ checksum = "e04d7f318608d35d4b61ddd75cbdaee86b023ebe2bd5a66ee0915f0bf93095a9"
 dependencies = [
  "hermit-abi",
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -4202,7 +4226,7 @@ checksum = "47e1ffaa40ddd1f3ed91f717a33c8c0ee23fff369e3aa8772b9605cc1d22f4c3"
 name = "mcp-types"
 version = "0.0.0"
 dependencies = [
- "schemars 0.8.22",
+ "schemars 1.2.0",
  "serde",
  "serde_json",
  "ts-rs",
@@ -5331,7 +5355,7 @@ dependencies = [
  "once_cell",
  "socket2 0.6.1",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -5652,7 +5676,7 @@ dependencies = [
  "rand 0.9.2",
  "reqwest",
  "rmcp-macros",
- "schemars 1.0.4",
+ "schemars 1.2.0",
  "serde",
  "serde_json",
  "sse-stream",
@@ -5710,7 +5734,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.4.15",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -5723,7 +5747,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.9.4",
- "windows-sys 0.52.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -5879,18 +5903,6 @@ dependencies = [
 
 [[package]]
 name = "schemars"
-version = "0.8.22"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fbf2ae1b8bc8e02df939598064d22402220cd5bbcca1c76f7d6a310974d5615"
-dependencies = [
- "dyn-clone",
- "schemars_derive 0.8.22",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "schemars"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4cd191f9397d57d581cddd31014772520aa448f65ef991055d7f61582c65165f"
@@ -5903,35 +5915,26 @@ dependencies = [
 
 [[package]]
 name = "schemars"
-version = "1.0.4"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82d20c4491bc164fa2f6c5d44565947a52ad80b9505d8e36f8d54c27c739fcd0"
+checksum = "54e910108742c57a770f492731f99be216a52fadd361b06c8fb59d74ccc267d2"
 dependencies = [
  "chrono",
  "dyn-clone",
+ "indexmap 2.12.0",
  "ref-cast",
- "schemars_derive 1.0.4",
+ "schemars_derive",
  "serde",
  "serde_json",
+ "url",
+ "uuid",
 ]
 
 [[package]]
 name = "schemars_derive"
-version = "0.8.22"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32e265784ad618884abaea0600a9adf15393368d840e0222d101a072f3f7534d"
-dependencies = [
- "proc-macro2",
- "quote",
- "serde_derive_internals",
- "syn 2.0.104",
-]
-
-[[package]]
-name = "schemars_derive"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33d020396d1d138dc19f1165df7545479dcd58d93810dc5d646a16e55abefa80"
+checksum = "4908ad288c5035a8eb12cfdf0d49270def0a268ee162b75eeee0f85d155a7c45"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6221,11 +6224,11 @@ dependencies = [
 
 [[package]]
 name = "serde_spanned"
-version = "1.0.0"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "40734c41988f7306bb04f0ecf60ec0f3f1caa34290e4e8ea471dcd3346483b83"
+checksum = "f8bbf91e5a4d6315eee45e704372590b30e260ee83af6639d64557f51b067776"
 dependencies = [
- "serde",
+ "serde_core",
 ]
 
 [[package]]
@@ -6252,7 +6255,7 @@ dependencies = [
  "indexmap 1.9.3",
  "indexmap 2.12.0",
  "schemars 0.9.0",
- "schemars 1.0.4",
+ "schemars 1.2.0",
  "serde_core",
  "serde_json",
  "serde_with_macros",
@@ -7121,12 +7124,12 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "0.9.5"
+version = "0.9.10+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75129e1dc5000bfbaa9fee9d1b21f974f9fbad9daec557a521ee6e080825f6e8"
+checksum = "0825052159284a1a8b4d6c0c86cbc801f2da5afd2b225fa548c72f2e74002f48"
 dependencies = [
  "indexmap 2.12.0",
- "serde",
+ "serde_core",
  "serde_spanned",
  "toml_datetime",
  "toml_parser",
@@ -8011,7 +8014,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

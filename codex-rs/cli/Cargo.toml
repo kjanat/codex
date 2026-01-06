@@ -4,16 +4,13 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
-[[bin]]
-name = "codex"
-path = "src/main.rs"
-
 [lib]
 name = "codex_cli"
 path = "src/lib.rs"
 
-[lints]
-workspace = true
+[[bin]]
+name = "codex"
+path = "src/main.rs"
 
 [dependencies]
 anyhow = { workspace = true }
@@ -25,6 +22,7 @@ codex-arg0 = { workspace = true }
 codex-chatgpt = { workspace = true }
 codex-cloud-tasks = { path = "../cloud-tasks" }
 codex-common = { workspace = true, features = ["cli"] }
+codex-config-schema = { workspace = true, optional = true }
 codex-core = { workspace = true }
 codex-exec = { workspace = true }
 codex-execpolicy = { workspace = true }
@@ -54,9 +52,6 @@ tokio = { workspace = true, features = [
 toml = { workspace = true }
 tracing = { workspace = true }
 
-[target.'cfg(target_os = "windows")'.dependencies]
-codex_windows_sandbox = { package = "codex-windows-sandbox", path = "../windows-sandbox-rs" }
-
 [dev-dependencies]
 assert_cmd = { workspace = true }
 assert_matches = { workspace = true }
@@ -64,3 +59,13 @@ codex-utils-cargo-bin = { workspace = true }
 predicates = { workspace = true }
 pretty_assertions = { workspace = true }
 tempfile = { workspace = true }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+codex_windows_sandbox = { package = "codex-windows-sandbox", path = "../windows-sandbox-rs" }
+
+[features]
+default = []
+config-schema = ["codex-core/config-schema", "dep:codex-config-schema"]
+
+[lints]
+workspace = true

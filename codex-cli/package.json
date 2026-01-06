@@ -11,7 +11,8 @@
   },
   "files": [
     "bin",
-    "vendor"
+    "vendor",
+    "config.schema.json"
   ],
   "repository": {
     "type": "git",

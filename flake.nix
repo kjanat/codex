@@ -3,7 +3,8 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-  outputs = { nixpkgs, ... }:
+  outputs =
+    { nixpkgs, ... }:
     let
       systems = [
         "x86_64-linux"
@@ -14,7 +15,8 @@
       forAllSystems = f: nixpkgs.lib.genAttrs systems f;
     in
     {
-      packages = forAllSystems (system:
+      packages = forAllSystems (
+        system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
           codex-rs = pkgs.callPackage ./codex-rs { };
@@ -22,6 +24,18 @@
         {
           codex-rs = codex-rs;
           default = codex-rs;
+        }
+      );
+
+      devShells = forAllSystems (
+        system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        {
+          default = pkgs.mkShellNoCC {
+            packages = [ pkgs.dotslash ];
+          };
         }
       );
     };

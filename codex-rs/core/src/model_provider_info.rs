@@ -12,6 +12,8 @@ use codex_app_server_protocol::AuthMode;
 use http::HeaderMap;
 use http::header::HeaderName;
 use http::header::HeaderValue;
+#[cfg(feature = "config-schema")]
+use schemars::JsonSchema;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
@@ -37,6 +39,7 @@ const OPENAI_PROVIDER_NAME: &str = "OpenAI";
 /// and *cannot* be auto-detected at runtime, therefore each provider entry
 /// must declare which one it expects.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "config-schema", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum WireApi {
     /// The Responses API exposed by OpenAI at `/v1/responses`.
@@ -49,6 +52,8 @@ pub enum WireApi {
 
 /// Serializable representation of a provider definition.
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[cfg_attr(feature = "config-schema", derive(JsonSchema))]
+#[cfg_attr(feature = "config-schema", schemars(extend("x-tombi-table-keys-order" = "schema")))]
 pub struct ModelProviderInfo {
     /// Friendly display name.
     pub name: String,

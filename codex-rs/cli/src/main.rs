@@ -131,6 +131,10 @@ enum Subcommand {
 
     /// Inspect feature flags.
     Features(FeaturesCli),
+
+    /// Generate JSON Schema for config.toml.
+    #[clap(name = "generate-config-schema")]
+    GenerateConfigSchema(GenerateConfigSchemaCommand),
 }
 
 #[derive(Debug, Parser)]
@@ -271,6 +275,13 @@ struct GenerateJsonSchemaCommand {
     /// Output directory where the schema bundle will be written
     #[arg(short = 'o', long = "out", value_name = "DIR")]
     out_dir: PathBuf,
+}
+
+#[derive(Debug, Args)]
+struct GenerateConfigSchemaCommand {
+    /// Output file path for the config.toml JSON Schema
+    #[arg(short = 'o', long = "out", value_name = "FILE")]
+    out_file: PathBuf,
 }
 
 #[derive(Debug, Parser)]
@@ -645,6 +656,28 @@ async fn cli_main(codex_linux_sandbox_exe: Option<PathBuf>) -> anyhow::Result<()
                 }
             }
         },
+        Some(Subcommand::GenerateConfigSchema(gen_cli)) => {
+            #[cfg(feature = "config-schema")]
+            {
+                let config = codex_config_schema::SchemaConfig::from_git();
+                let schema = codex_config_schema::generate_config_schema(&config);
+                let json = serde_json::to_string_pretty(&schema)?;
+                // Create parent directories if they don't exist
+                if let Some(parent) = gen_cli.out_file.parent() {
+                    std::fs::create_dir_all(parent)?;
+                }
+                std::fs::write(&gen_cli.out_file, json)?;
+                eprintln!("Wrote config schema to {}", gen_cli.out_file.display());
+            }
+            #[cfg(not(feature = "config-schema"))]
+            {
+                let _ = gen_cli;
+                anyhow::bail!(
+                    "The 'generate-config-schema' command requires the 'config-schema' feature. \
+                     Rebuild with: cargo build --features config-schema"
+                );
+            }
+        }
     }
 
     Ok(())

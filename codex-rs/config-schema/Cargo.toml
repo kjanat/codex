@@ -1,0 +1,28 @@
+[package]
+name = "codex-config-schema"
+version.workspace = true
+edition.workspace = true
+description = "JSON Schema generation for Codex config.toml"
+license.workspace = true
+
+[lib]
+doctest = false
+name = "codex_config_schema"
+path = "src/lib.rs"
+
+[[bin]]
+name = "codex-config-schema"
+path = "src/bin/main.rs"
+
+[dependencies]
+codex-core = { workspace = true, features = ["config-schema"] }
+codex-git = { workspace = true }
+codex-utils-json-sort = { workspace = true }
+schemars = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+pretty_assertions = { workspace = true }
+
+[lints]
+workspace = true

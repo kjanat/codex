@@ -26,6 +26,8 @@ use oauth2::Scope;
 use oauth2::TokenResponse;
 use oauth2::basic::BasicTokenType;
 use rmcp::transport::auth::OAuthTokenResponse;
+#[cfg(feature = "config-schema")]
+use schemars::JsonSchema;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
@@ -64,6 +66,7 @@ pub struct StoredOAuthTokens {
 
 /// Determine where Codex should store and read MCP credentials.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "config-schema", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum OAuthCredentialsStoreMode {
     /// `Keyring` when available; otherwise, `File`.

@@ -1,3 +1,7 @@
+// Allow deprecated items when generating the config schema so that deprecated fields
+// still appear in the schema (with deprecated: true) for documentation purposes.
+#![cfg_attr(feature = "config-schema", allow(deprecated))]
+
 use crate::auth::AuthCredentialsStoreMode;
 use crate::config::types::DEFAULT_OTEL_ENVIRONMENT;
 use crate::config::types::History;
@@ -42,6 +46,8 @@ use codex_rmcp_client::OAuthCredentialsStoreMode;
 use codex_utils_absolute_path::AbsolutePathBuf;
 use codex_utils_absolute_path::AbsolutePathBufGuard;
 use dirs::home_dir;
+#[cfg(feature = "config-schema")]
+use schemars::JsonSchema;
 use serde::Deserialize;
 use serde::Serialize;
 use similar::DiffableStr;
@@ -60,6 +66,8 @@ use toml_edit::DocumentMut;
 mod constraint;
 pub mod edit;
 pub mod profile;
+#[cfg(feature = "config-schema")]
+pub mod schema_transforms;
 pub mod service;
 pub mod types;
 pub use constraint::Constrained;
@@ -386,6 +394,7 @@ impl ConfigBuilder {
         self
     }
 
+    #[allow(deprecated)]
     pub async fn build(self) -> std::io::Result<Config> {
         let Self {
             codex_home,
@@ -666,11 +675,31 @@ pub fn set_default_oss_provider(codex_home: &Path, provider: &str) -> std::io::R
 }
 
 /// Base config deserialized from ~/.codex/config.toml.
+#[allow(deprecated)]
 #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq)]
+#[cfg_attr(feature = "config-schema", derive(JsonSchema))]
+#[cfg_attr(
+    feature = "config-schema",
+    schemars(
+        title = "Codex configuration file",
+        extend(
+            "x-tombi-table-keys-order" = "schema",
+            "x-tombi-toml-version" = "v1.1.0"
+        )
+    )
+)]
 pub struct ConfigToml {
     /// Optional override of model selection.
+    #[cfg_attr(
+        feature = "config-schema",
+        schemars(extend("examples" = crate::models_manager::model_presets::picker_model_ids()))
+    )]
     pub model: Option<String>,
     /// Review model override used by the `/review` feature.
+    #[cfg_attr(
+        feature = "config-schema",
+        schemars(extend("examples" = crate::models_manager::model_presets::picker_model_ids()))
+    )]
     pub review_model: Option<String>,
 
     /// Provider to use from the model_providers map.
@@ -685,6 +714,8 @@ pub struct ConfigToml {
     /// Default approval policy for executing commands.
     pub approval_policy: Option<AskForApproval>,
 
+    /// Policy for environment variables when spawning shell processes.
+    /// Controls which variables are inherited, excluded, or explicitly set.
     #[serde(default)]
     pub shell_environment_policy: ShellEnvironmentPolicyToml,
 
@@ -774,7 +805,11 @@ pub struct ConfigToml {
     /// Defaults to `false`.
     pub show_raw_agent_reasoning: Option<bool>,
 
+    /// Reasoning effort level for Responses API models.
+    /// Controls how much "thinking" the model does before responding.
     pub model_reasoning_effort: Option<ReasoningEffort>,
+    /// Reasoning summary mode for Responses API models.
+    /// Useful for debugging and understanding the model's reasoning process.
     pub model_reasoning_summary: Option<ReasoningSummary>,
     /// Optional verbosity control for GPT-5 models (Responses API `text.verbosity`).
     pub model_verbosity: Option<Verbosity>,
@@ -785,9 +820,14 @@ pub struct ConfigToml {
     /// Base URL for requests to ChatGPT (as opposed to the OpenAI API).
     pub chatgpt_base_url: Option<String>,
 
+    /// Per-project configuration keyed by absolute path.
+    /// Use this to set trust levels for specific project directories.
+    #[cfg_attr(feature = "config-schema", schemars(extend("x-tombi-table-keys-order" = "ascending")))]
     pub projects: Option<HashMap<String, ProjectConfig>>,
 
-    /// Nested tools section for feature toggles
+    /// DEPRECATED: Use `[features]` table instead.
+    #[allow(deprecated)]
+    #[deprecated = "Use [features] table instead"]
     pub tools: Option<ToolsToml>,
 
     /// Centralized feature flags (new). Prefer this over individual toggles.
@@ -823,15 +863,27 @@ pub struct ConfigToml {
     /// See [`crate::config::types::Notices`] for more details
     pub notice: Option<Notice>,
 
-    /// Legacy, now use features
+    /// DEPRECATED: Use `instructions` field instead.
+    #[deprecated = "Use instructions field instead"]
     pub experimental_instructions_file: Option<AbsolutePathBuf>,
+
+    /// DEPRECATED: Use `compact_prompt` field instead.
+    #[deprecated = "Use compact_prompt field instead"]
     pub experimental_compact_prompt_file: Option<AbsolutePathBuf>,
+
+    /// DEPRECATED: Use `[features] unified_exec = true` instead.
+    #[deprecated = "Use [features] unified_exec = true instead"]
     pub experimental_use_unified_exec_tool: Option<bool>,
+
+    /// DEPRECATED: Use `[features] apply_patch_freeform = true` instead.
+    #[deprecated = "Use [features] apply_patch_freeform = true instead"]
     pub experimental_use_freeform_apply_patch: Option<bool>,
+
     /// Preferred OSS provider for local models, e.g. "lmstudio" or "ollama".
     pub oss_provider: Option<String>,
 }
 
+#[allow(deprecated)]
 impl From<ConfigToml> for UserSavedConfig {
     fn from(config_toml: ConfigToml) -> Self {
         let profiles = config_toml
@@ -858,6 +910,8 @@ impl From<ConfigToml> for UserSavedConfig {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "config-schema", derive(JsonSchema))]
+#[cfg_attr(feature = "config-schema", schemars(extend("x-tombi-table-keys-order" = "schema")))]
 pub struct ProjectConfig {
     pub trust_level: Option<TrustLevel>,
 }
@@ -872,26 +926,91 @@ impl ProjectConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq)]
-pub struct ToolsToml {
-    #[serde(default, alias = "web_search_request")]
-    pub web_search: Option<bool>,
+mod legacy_tools_toml {
+    #![allow(deprecated)]
 
-    /// Enable the `view_image` tool that lets the agent attach local images.
-    #[serde(default)]
-    pub view_image: Option<bool>,
-}
+    #[cfg(feature = "config-schema")]
+    use schemars::JsonSchema;
+    use serde::Deserialize;
+    use serde::Serialize;
 
-impl From<ToolsToml> for Tools {
-    fn from(tools_toml: ToolsToml) -> Self {
-        Self {
-            web_search: tools_toml.web_search,
-            view_image: tools_toml.view_image,
+    use super::Tools;
+
+    /// Legacy tools configuration table.
+    ///
+    /// DEPRECATED: Use `[features]` table instead:
+    /// - `tools.web_search` -> `features.web_search_request`
+    /// - `tools.view_image` -> `features.view_image_tool`
+    #[deprecated = "Use [features] table instead"]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq)]
+    #[cfg_attr(feature = "config-schema", derive(JsonSchema))]
+    #[cfg_attr(feature = "config-schema", schemars(
+        transform = fix_tools_toml_defaults,
+        extend("x-tombi-table-keys-order" = "schema")
+    ))]
+    pub struct ToolsToml {
+        /// Enable web search tool.
+        ///
+        /// DEPRECATED: Instead use:
+        ///
+        /// ```toml
+        /// [features]
+        /// web_search_request = true
+        /// ```
+        #[deprecated = "Use [features] web_search_request = true instead"]
+        #[serde(default, alias = "web_search_request")]
+        pub web_search: Option<bool>,
+
+        /// Enable the `view_image` tool that lets the agent attach local images.
+        ///
+        /// DEPRECATED: Instead use:
+        ///
+        /// ```toml
+        /// [features]
+        /// view_image_tool = true
+        /// ```
+        #[deprecated = "Use [features] view_image_tool = true instead"]
+        #[serde(default)]
+        pub view_image: Option<bool>,
+    }
+
+    /// Transform to fix default values in ToolsToml schema.
+    ///
+    /// Schemars sets default to null for Option<bool> fields, but we want
+    /// to show the effective default behavior (false for web_search, true for view_image).
+    ///
+    /// This transform is attached to ToolsToml via `#[schemars(transform = ...)]`,
+    /// so it only runs on ToolsToml's schema - no need for a type guard.
+    #[cfg(feature = "config-schema")]
+    fn fix_tools_toml_defaults(schema: &mut schemars::Schema) {
+        if let Some(props) = schema.get_mut("properties").and_then(|v| v.as_object_mut()) {
+            // Fix web_search default: null -> false
+            if let Some(ws) = props.get_mut("web_search").and_then(|v| v.as_object_mut()) {
+                ws.insert("default".to_string(), serde_json::json!(false));
+            }
+            // Fix view_image default: null -> true
+            if let Some(vi) = props.get_mut("view_image").and_then(|v| v.as_object_mut()) {
+                vi.insert("default".to_string(), serde_json::json!(true));
+            }
+        }
+    }
+
+    impl From<ToolsToml> for Tools {
+        fn from(tools_toml: ToolsToml) -> Self {
+            Self {
+                web_search: tools_toml.web_search,
+                view_image: tools_toml.view_image,
+            }
         }
     }
 }
 
+#[allow(deprecated)]
+pub use legacy_tools_toml::ToolsToml;
+
 #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "config-schema", derive(JsonSchema))]
+#[cfg_attr(feature = "config-schema", schemars(extend("x-tombi-table-keys-order" = "schema")))]
 pub struct GhostSnapshotToml {
     /// Exclude untracked files larger than this many bytes from ghost snapshots.
     #[serde(alias = "ignore_untracked_files_over_bytes")]
@@ -1070,6 +1189,7 @@ impl Config {
         Self::load_config_with_layer_stack(cfg, overrides, codex_home, config_layer_stack)
     }
 
+    #[allow(deprecated)]
     fn load_config_with_layer_stack(
         cfg: ConfigToml,
         overrides: ConfigOverrides,
@@ -1991,6 +2111,7 @@ trust_level = "trusted"
     }
 
     #[test]
+    #[allow(deprecated)]
     fn legacy_toggles_map_to_features() -> std::io::Result<()> {
         let codex_home = TempDir::new()?;
         let cfg = ConfigToml {
@@ -2996,6 +3117,7 @@ model = "gpt-5.1-codex"
     }
 
     #[test]
+    #[allow(deprecated)]
     fn loads_compact_prompt_from_file() -> std::io::Result<()> {
         let codex_home = TempDir::new()?;
         let workspace = codex_home.path().join("workspace");

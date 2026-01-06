@@ -7,6 +7,8 @@
 
 use crate::config::ConfigToml;
 use crate::config::profile::ConfigProfile;
+#[cfg(feature = "config-schema")]
+use schemars::JsonSchema;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -52,69 +54,201 @@ impl Stage {
             _ => None,
         }
     }
+
+    /// Returns a short label for use in schema descriptions.
+    pub fn schema_label(self) -> &'static str {
+        match self {
+            Stage::Stable => "Stable",
+            Stage::Beta { .. } => "Beta",
+            Stage::Experimental => "Experimental",
+            Stage::Deprecated => "Deprecated",
+            Stage::Removed => "Removed",
+        }
+    }
 }
 
-/// Unique features toggled via configuration.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Feature {
-    // Stable.
-    /// Create a ghost commit at each turn.
-    GhostCommit,
-    /// Include the view_image tool.
-    ViewImageTool,
-    /// Send warnings to the model to correct it on the tool usage.
-    ModelWarnings,
-    /// Enable the default shell tool.
-    ShellTool,
+/// Metadata for a single feature definition.
+#[derive(Debug, Clone, Copy)]
+pub struct FeatureSpec {
+    pub id: Feature,
+    pub key: &'static str,
+    pub stage: Stage,
+    pub default_enabled: bool,
+}
+
+/// Generates the `Feature` enum, its methods, and the `FEATURES` array from a
+/// single source of truth. Each entry produces:
+/// - An enum variant with `#[doc = $desc]` for IDE hover/rustdoc
+/// - `description()` returning the same literal at runtime
+/// - `key()`, `stage()`, `default_enabled()` via direct match arms (no lookup)
+/// - An entry in the `FEATURES` array for iteration
+macro_rules! define_features {
+    ($(
+        $variant:ident {
+            desc: $desc:literal,
+            key: $key:literal,
+            stage: $stage:expr,
+            default: $default:expr $(,)?
+        }
+    ),+ $(,)?) => {
+        /// Unique features toggled via configuration.
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        pub enum Feature {
+            $(
+                #[doc = $desc]
+                $variant,
+            )+
+        }
+
+        impl Feature {
+            pub fn key(self) -> &'static str {
+                match self { $(Self::$variant => $key,)+ }
+            }
+
+            /// Returns the description for this feature (same as the doc comment).
+            pub fn description(self) -> &'static str {
+                match self { $(Self::$variant => $desc,)+ }
+            }
+
+            pub fn stage(self) -> Stage {
+                match self { $(Self::$variant => $stage,)+ }
+            }
+
+            pub fn default_enabled(self) -> bool {
+                match self { $(Self::$variant => $default,)+ }
+            }
+        }
+
+        /// Single registry of all feature definitions.
+        pub const FEATURES: &[FeatureSpec] = &[
+            $(
+                FeatureSpec {
+                    id: Feature::$variant,
+                    key: $key,
+                    stage: $stage,
+                    default_enabled: $default,
+                },
+            )+
+        ];
+    };
+}
+
+define_features! {
+    // Stable
+    GhostCommit {
+        desc: "Create a ghost commit at each turn.",
+        key: "undo",
+        stage: Stage::Stable,
+        default: false,
+    },
+    ParallelToolCalls {
+        desc: "Allow model to call multiple tools in parallel (only for models supporting it).",
+        key: "parallel",
+        stage: Stage::Stable,
+        default: true,
+    },
+    ViewImageTool {
+        desc: "Include the view_image tool.",
+        key: "view_image_tool",
+        stage: Stage::Stable,
+        default: true,
+    },
+    ShellTool {
+        desc: "Enable the default shell tool.",
+        key: "shell_tool",
+        stage: Stage::Stable,
+        default: true,
+    },
+    ModelWarnings {
+        desc: "Send warnings to the model to correct it on the tool usage.",
+        key: "warnings",
+        stage: Stage::Stable,
+        default: true,
+    },
+    WebSearchRequest {
+        desc: "Allow the model to request web searches.",
+        key: "web_search_request",
+        stage: Stage::Stable,
+        default: false,
+    },
+
+    // Beta
+    UnifiedExec {
+        desc: "Use the single unified PTY-backed exec tool.",
+        key: "unified_exec",
+        stage: Stage::Beta {
+            name: "Background terminal",
+            menu_description: "Run long-running terminal commands in the background.",
+            announcement: "NEW! Try Background terminals for long running processes. Enable in /experimental!",
+        },
+        default: false,
+    },
+    ShellSnapshot {
+        desc: "Experimental shell snapshotting.",
+        key: "shell_snapshot",
+        stage: Stage::Beta {
+            name: "Shell snapshot",
+            menu_description: "Snapshot your shell environment to avoid re-running login scripts for every command.",
+            announcement: "NEW! Try shell snapshotting to make your Codex faster. Enable in /experimental!",
+        },
+        default: false,
+    },
 
     // Experimental
-    /// Use the single unified PTY-backed exec tool.
-    UnifiedExec,
-    /// Include the freeform apply_patch tool.
-    ApplyPatchFreeform,
-    /// Allow the model to request web searches.
-    WebSearchRequest,
-    /// Gate the execpolicy enforcement for shell/unified exec.
-    ExecPolicy,
-    /// Enable Windows sandbox (restricted token) on Windows.
-    WindowsSandbox,
-    /// Use the elevated Windows sandbox pipeline (setup + runner).
-    WindowsSandboxElevated,
-    /// Remote compaction enabled (only for ChatGPT auth)
-    RemoteCompaction,
-    /// Refresh remote models and emit AppReady once the list is available.
-    RemoteModels,
-    /// Allow model to call multiple tools in parallel (only for models supporting it).
-    ParallelToolCalls,
-    /// Experimental shell snapshotting.
-    ShellSnapshot,
-    /// Experimental TUI v2 (viewport) implementation.
-    Tui2,
-    /// Enable discovery and injection of skills.
-    Skills,
-    /// Enforce UTF8 output in Powershell.
-    PowershellUtf8,
-}
-
-impl Feature {
-    pub fn key(self) -> &'static str {
-        self.info().key
-    }
-
-    pub fn stage(self) -> Stage {
-        self.info().stage
-    }
-
-    pub fn default_enabled(self) -> bool {
-        self.info().default_enabled
-    }
-
-    fn info(self) -> &'static FeatureSpec {
-        FEATURES
-            .iter()
-            .find(|spec| spec.id == self)
-            .unwrap_or_else(|| unreachable!("missing FeatureSpec for {:?}", self))
-    }
+    ApplyPatchFreeform {
+        desc: "Include the freeform apply_patch tool.",
+        key: "apply_patch_freeform",
+        stage: Stage::Experimental,
+        default: false,
+    },
+    ExecPolicy {
+        desc: "Gate the execpolicy enforcement for shell/unified exec.",
+        key: "exec_policy",
+        stage: Stage::Experimental,
+        default: true,
+    },
+    WindowsSandbox {
+        desc: "Enable Windows sandbox (restricted token) on Windows.",
+        key: "experimental_windows_sandbox",
+        stage: Stage::Experimental,
+        default: false,
+    },
+    WindowsSandboxElevated {
+        desc: "Use the elevated Windows sandbox pipeline (setup + runner).",
+        key: "elevated_windows_sandbox",
+        stage: Stage::Experimental,
+        default: false,
+    },
+    RemoteCompaction {
+        desc: "Remote compaction enabled (only for ChatGPT auth).",
+        key: "remote_compaction",
+        stage: Stage::Experimental,
+        default: true,
+    },
+    RemoteModels {
+        desc: "Refresh remote models and emit AppReady once the list is available.",
+        key: "remote_models",
+        stage: Stage::Experimental,
+        default: false,
+    },
+    Skills {
+        desc: "Enable discovery and injection of skills.",
+        key: "skills",
+        stage: Stage::Experimental,
+        default: true,
+    },
+    PowershellUtf8 {
+        desc: "Enforce UTF8 output in Powershell.",
+        key: "powershell_utf8",
+        stage: Stage::Experimental,
+        default: false,
+    },
+    Tui2 {
+        desc: "Experimental TUI v2 (viewport) implementation.",
+        key: "tui2",
+        stage: Stage::Experimental,
+        default: false,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -217,6 +351,7 @@ impl Features {
         }
     }
 
+    #[allow(deprecated)]
     pub fn from_config(
         cfg: &ConfigToml,
         config_profile: &ConfigProfile,
@@ -224,6 +359,7 @@ impl Features {
     ) -> Self {
         let mut features = Features::with_defaults();
 
+        #[allow(deprecated)]
         let base_legacy = LegacyFeatureToggles {
             experimental_use_freeform_apply_patch: cfg.experimental_use_freeform_apply_patch,
             experimental_use_unified_exec_tool: cfg.experimental_use_unified_exec_tool,
@@ -278,131 +414,18 @@ pub fn is_known_feature_key(key: &str) -> bool {
 
 /// Deserializable features table for TOML.
 #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq)]
+#[cfg_attr(feature = "config-schema", derive(JsonSchema))]
+#[cfg_attr(feature = "config-schema", schemars(extend(
+    "additionalProperties" = {"type": "boolean"},
+    "x-tombi-table-keys-order" = {"properties": "schema", "additionalProperties": "ascending"}
+)))]
 pub struct FeaturesToml {
     #[serde(flatten)]
     pub entries: BTreeMap<String, bool>,
 }
 
-/// Single, easy-to-read registry of all feature definitions.
-#[derive(Debug, Clone, Copy)]
-pub struct FeatureSpec {
-    pub id: Feature,
-    pub key: &'static str,
-    pub stage: Stage,
-    pub default_enabled: bool,
+/// Returns all feature specs for schema generation.
+#[cfg(feature = "config-schema")]
+pub fn all_feature_specs() -> &'static [FeatureSpec] {
+    FEATURES
 }
-
-pub const FEATURES: &[FeatureSpec] = &[
-    // Stable features.
-    FeatureSpec {
-        id: Feature::GhostCommit,
-        key: "undo",
-        stage: Stage::Stable,
-        default_enabled: false,
-    },
-    FeatureSpec {
-        id: Feature::ParallelToolCalls,
-        key: "parallel",
-        stage: Stage::Stable,
-        default_enabled: true,
-    },
-    FeatureSpec {
-        id: Feature::ViewImageTool,
-        key: "view_image_tool",
-        stage: Stage::Stable,
-        default_enabled: true,
-    },
-    FeatureSpec {
-        id: Feature::ShellTool,
-        key: "shell_tool",
-        stage: Stage::Stable,
-        default_enabled: true,
-    },
-    FeatureSpec {
-        id: Feature::ModelWarnings,
-        key: "warnings",
-        stage: Stage::Stable,
-        default_enabled: true,
-    },
-    FeatureSpec {
-        id: Feature::WebSearchRequest,
-        key: "web_search_request",
-        stage: Stage::Stable,
-        default_enabled: false,
-    },
-    // Beta program. Rendered in the `/experimental` menu for users.
-    FeatureSpec {
-        id: Feature::UnifiedExec,
-        key: "unified_exec",
-        stage: Stage::Beta {
-            name: "Background terminal",
-            menu_description: "Run long-running terminal commands in the background.",
-            announcement: "NEW! Try Background terminals for long running processes. Enable in /experimental!",
-        },
-        default_enabled: false,
-    },
-    FeatureSpec {
-        id: Feature::ShellSnapshot,
-        key: "shell_snapshot",
-        stage: Stage::Beta {
-            name: "Shell snapshot",
-            menu_description: "Snapshot your shell environment to avoid re-running login scripts for every command.",
-            announcement: "NEW! Try shell snapshotting to make your Codex faster. Enable in /experimental!",
-        },
-        default_enabled: false,
-    },
-    FeatureSpec {
-        id: Feature::ApplyPatchFreeform,
-        key: "apply_patch_freeform",
-        stage: Stage::Experimental,
-        default_enabled: false,
-    },
-    FeatureSpec {
-        id: Feature::ExecPolicy,
-        key: "exec_policy",
-        stage: Stage::Experimental,
-        default_enabled: true,
-    },
-    FeatureSpec {
-        id: Feature::WindowsSandbox,
-        key: "experimental_windows_sandbox",
-        stage: Stage::Experimental,
-        default_enabled: false,
-    },
-    FeatureSpec {
-        id: Feature::WindowsSandboxElevated,
-        key: "elevated_windows_sandbox",
-        stage: Stage::Experimental,
-        default_enabled: false,
-    },
-    FeatureSpec {
-        id: Feature::RemoteCompaction,
-        key: "remote_compaction",
-        stage: Stage::Experimental,
-        default_enabled: true,
-    },
-    FeatureSpec {
-        id: Feature::RemoteModels,
-        key: "remote_models",
-        stage: Stage::Experimental,
-        default_enabled: false,
-    },
-    FeatureSpec {
-        id: Feature::Skills,
-        key: "skills",
-        stage: Stage::Experimental,
-        default_enabled: true,
-    },
-    FeatureSpec {
-        id: Feature::PowershellUtf8,
-        key: "powershell_utf8",
-        stage: Stage::Experimental,
-        default_enabled: false,
-    },
-    FeatureSpec {
-        id: Feature::Tui2,
-        key: "tui2",
-        stage: Stage::Experimental,
-        default_enabled: false,
-    },
-];
